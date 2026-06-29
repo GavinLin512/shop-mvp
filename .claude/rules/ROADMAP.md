@@ -10,9 +10,9 @@
 |------|------|------|------|----------|
 | - [x] | 00 | `00-foundation` 骨架 + Prisma schema + migrate | — | 地基 |
 | - [x] | 01 | `01-auth-register` POST /auth/register | 00 | — |
-| - [ ] | 02 | `02-auth-login` POST /auth/login → JWT | 01 | — |
-| - [ ] | 03 | `03-rbac` requireAuth / requireRole | 02 | #6 |
-| - [ ] | 04 | `05-money` 最小單位整數 + ISO4217 格式化 | — | #4 |
+| - [x] | 02 | `02-auth-login` POST /auth/login → JWT | 01 | — |
+| - [x] | 03 | `03-rbac` requireAuth / requireRole | 02 | #6 |
+| - [x] | 04 | `05-money` 最小單位整數 + ISO4217 格式化 | — | #4 |
 | - [ ] | 05 | `04-plans` GET/POST /plans | 03, 05-money | #6 |
 | - [ ] | 06 | `06-idempotency` 決定性冪等鍵 + UNIQUE | — | #1 |
 | - [ ] | 07 | `08-payment-adapter` PaymentProvider 介面 + Mock | 09 | — |

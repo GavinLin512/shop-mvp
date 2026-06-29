@@ -1,10 +1,27 @@
 # AGENTS.md
 
+## 本地開發指令
+
+```bash
+pnpm install        # 安裝依賴
+pnpm db:migrate     # 建立/更新 DB schema
+pnpm dev            # 開發伺服器（tsx watch，熱重載）
+pnpm test           # 執行所有整合測試
+pnpm build          # 編譯 TypeScript
+pnpm start          # 生產模式（需先 build）
+```
+
+環境變數：複製 `.env.example` → `.env`，填入 `DATABASE_URL`、`JWT_SECRET`、`WEBHOOK_SECRET`。
+測試環境另需 `.env.test`（建議使用獨立 Neon branch）。
+
+---
+
 ## Rules 索引
 
 - [`.claude/rules/ROADMAP.md`](.claude/rules/ROADMAP.md) — plans 各任務完成狀態與實作順序
 - [`.claude/rules/ARCHITECTURE.md`](.claude/rules/ARCHITECTURE.md) — 專案架構分層與資料流
 - [`.claude/rules/DECISION.md`](.claude/rules/DECISION.md) — 核心設計決策、冪等鍵、Webhook 順序、多幣別、範圍取捨
+- [`.claude/rules/SECURITY.md`](.claude/rules/SECURITY.md) — 資安守則:禁讀機密檔、禁危險指令、專案資安要點
 - [`.claude/rules/preferences.md`](.claude/rules/preferences.md) — 個人偏好設定
 - [`DESIGN.md`](DESIGN.md) — demo 前端視覺系統(深色工業風)
 

@@ -84,3 +84,70 @@ Payment:      PENDING → SUCCESS / FAILED
 | GET  | `/mock-gateway/charge/:txnId` | 查詢交易(對帳用) |
 
 API 文件:啟動後見 Swagger UI。
+
+---
+
+## 本地開發
+
+### 前置需求
+
+- Node.js 20+
+- pnpm 11+
+- Neon Postgres(或任何 PostgreSQL)
+
+### 1. 安裝依賴
+
+```bash
+pnpm install
+```
+
+### 2. 設定環境變數
+
+```bash
+cp .env.example .env
+```
+
+編輯 `.env`，填入以下欄位：
+
+| 變數 | 說明 |
+|------|------|
+| `DATABASE_URL` | Neon Postgres connection string |
+| `JWT_SECRET` | JWT 簽章密鑰（隨機長字串） |
+| `WEBHOOK_SECRET` | HMAC 驗簽密鑰（隨機長字串） |
+| `PORT` | 監聽 port，預設 `3000` |
+
+### 3. 建立資料庫 schema
+
+```bash
+pnpm db:migrate
+```
+
+### 4. 啟動開發伺服器
+
+```bash
+pnpm dev
+```
+
+伺服器啟動後：
+- API：`http://localhost:3000`
+- Swagger UI：`http://localhost:3000/api-docs`（實作後可用）
+
+### 其他指令
+
+| 指令 | 說明 |
+|------|------|
+| `pnpm build` | 編譯 TypeScript → `dist/` |
+| `pnpm start` | 生產模式（需先 build） |
+| `pnpm test` | 執行整合測試 |
+| `pnpm test:watch` | 監看模式執行測試 |
+| `pnpm db:generate` | 重新產生 Prisma client |
+| `pnpm db:studio` | 開啟 Prisma Studio |
+
+### 測試環境
+
+測試讀取 `.env.test`，需另外設定：
+
+```bash
+cp .env.example .env.test
+# 填入測試用 DATABASE_URL（建議獨立 Neon branch）
+```

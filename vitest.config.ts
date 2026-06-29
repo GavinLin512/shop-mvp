@@ -8,5 +8,7 @@ export default defineConfig(({ mode }) => ({
     globals: true,
     setupFiles: ['./tests/setup.ts'],
     env: loadEnv(mode, process.cwd(), ''),
+    // 共用 Neon test DB，必須循序執行避免 beforeEach TRUNCATE 互相干擾
+    fileParallelism: false,
   },
 }))

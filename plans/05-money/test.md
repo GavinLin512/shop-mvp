@@ -4,10 +4,10 @@
 
 ## 任務 Checklist
 
-- [ ] 1. USD 兩位小數格式化 [tracer bullet]
-- [ ] 2. JPY exponent 0(無小數)
-- [ ] 3. currency 驗證
-- [ ] 4. 非法 amount 被擋
+- [x] 1. USD 兩位小數格式化 [tracer bullet]
+- [x] 2. JPY exponent 0(無小數)
+- [x] 3. currency 驗證
+- [x] 4. 非法 amount 被擋
 
 ## 行為清單(RED → GREEN,逐一)
 

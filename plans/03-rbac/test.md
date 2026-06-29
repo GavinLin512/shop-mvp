@@ -4,11 +4,11 @@
 
 ## 任務 Checklist
 
-- [ ] 1. 帶有效 token 通過 requireAuth [tracer bullet]
-- [ ] 2. 不帶 token → 401
-- [ ] 3. 無效 / 竄改 / 過期 token → 401
-- [ ] 4. USER 存取 admin-only → 403
-- [ ] 5. ADMIN 存取 admin-only → 200
+- [x] 1. 帶有效 token 通過 requireAuth [tracer bullet]
+- [x] 2. 不帶 token → 401
+- [x] 3. 無效 / 竄改 / 過期 token → 401
+- [x] 4. USER 存取 admin-only → 403
+- [x] 5. ADMIN 存取 admin-only → 200
 
 ## 行為清單(RED → GREEN,逐一)
 
