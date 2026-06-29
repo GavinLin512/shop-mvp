@@ -4,11 +4,11 @@
 
 ## 任務 Checklist
 
-- [ ] 1. 逾時 PENDING 且 gateway SUCCESS → 補成 PAID/ACTIVE [tracer bullet]
-- [ ] 2. gateway 仍 PENDING → 不動
-- [ ] 3. gateway FAILED → 補成 FAILED
-- [ ] 4. 已終態不重撈
-- [ ] 5. 與 webhook 不重複處理
+- [x] 1. 逾時 PENDING 且 gateway SUCCESS → 補成 PAID/ACTIVE [tracer bullet]
+- [x] 2. gateway 仍 PENDING → 不動
+- [x] 3. gateway FAILED → 補成 FAILED
+- [x] 4. 已終態不重撈
+- [x] 5. 與 webhook 不重複處理
 
 ## 行為清單(RED → GREEN,逐一)
 
