@@ -4,10 +4,10 @@
 
 ## 任務 Checklist
 
-- [ ] 1. admin 建立方案回 201 [tracer bullet]
-- [ ] 2. GET /plans 列出 active 方案
-- [ ] 3. 授權邊界(USER 403 / 未登入 401)
-- [ ] 4. 驗證邊界(amount / currency / intervalDays → 400)
+- [x] 1. admin 建立方案回 201 [tracer bullet]
+- [x] 2. GET /plans 列出 active 方案
+- [x] 3. 授權邊界(USER 403 / 未登入 401)
+- [x] 4. 驗證邊界(amount / currency / intervalDays → 400)
 
 ## 行為清單(RED → GREEN,逐一)
 
