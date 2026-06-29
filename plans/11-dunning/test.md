@@ -4,10 +4,10 @@
 
 ## 任務 Checklist
 
-- [ ] 1. ACTIVE 扣款失敗 → PAST_DUE + retry1 新單 [tracer bullet]
-- [ ] 2. 重試成功 → 回 ACTIVE 並重置
-- [ ] 3. 連續 3 次失敗 → CANCELED
-- [ ] 4. 失敗單不重用(每次新 key)
+- [x] 1. ACTIVE 扣款失敗 → PAST_DUE + retry1 新單 [tracer bullet]
+- [x] 2. 重試成功 → 回 ACTIVE 並重置
+- [x] 3. 連續 3 次失敗 → CANCELED
+- [x] 4. 失敗單不重用(每次新 key)
 
 ## 行為清單(RED → GREEN,逐一)
 
