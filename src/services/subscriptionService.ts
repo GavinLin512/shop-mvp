@@ -14,6 +14,12 @@ type FindByIdInput = {
   requesterRole: string
 }
 
+type CancelInput = {
+  id: string
+  requesterId: string
+  requesterRole: string
+}
+
 /**
  * 工廠函式 — 注入 PaymentProvider，讓測試可替換 fake provider（ARCHITECTURE.md adapter pattern）。
  */
@@ -83,6 +89,31 @@ export function createSubscriptionService(provider: PaymentProvider) {
         throw new AppError(403, 'Forbidden')
       }
       return sub
+    },
+
+    /**
+     * 期末取消（DECISION.md #9）：設 cancelAtPeriodEnd=true，status 維持 ACTIVE。
+     * 重複呼叫冪等：已標記則直接回傳，不重複寫入。
+     * 實際轉 CANCELED 由 billing-cron 在 nextBillingDate 到期時執行。
+     */
+    async cancel({ id, requesterId, requesterRole }: CancelInput) {
+      const sub = await prisma.subscription.findUnique({ where: { id } })
+      if (!sub) throw new AppError(404, 'Subscription not found')
+
+      // 只有本人或 ADMIN 可取消（DECISION.md #6）
+      if (sub.memberId !== requesterId && requesterRole !== 'ADMIN') {
+        throw new AppError(403, 'Forbidden')
+      }
+
+      // 冪等：已標記 cancelAtPeriodEnd 直接回傳現狀
+      if (sub.cancelAtPeriodEnd) {
+        return sub
+      }
+
+      return prisma.subscription.update({
+        where: { id },
+        data: { cancelAtPeriodEnd: true },
+      })
     },
   }
 }

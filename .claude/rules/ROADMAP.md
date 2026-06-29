@@ -22,7 +22,7 @@
 | - [x] | 11 | `12-billing-cron` nextBillingDate <= now 逐筆 tx | 06, 07, 08 | #7 |
 | - [x] | 12 | `11-dunning` 失敗重試 + retryCount + 3 次轉 CANCELED | 10, 12-billing | #5 |
 | - [x] | 13 | `13-reconciliation` 對帳 cron + 查詢 API [SHOULD] | 09, 10 | #3 |
-| - [ ] | 14 | `14-cancel` 期末取消 + 冪等 [SHOULD] | 07, 12-billing | #9 |
+| - [x] | 14 | `14-cancel` 期末取消 + 冪等 [SHOULD] | 07, 12-billing | #9 |
 | - [ ] | 15 | `15-stripe-provider` StripeProvider 並存 + /webhooks/stripe + off-session 續扣 [SHOULD] | 10, 11, 12 | ADR-0011 |
 
 > 任務編號(00–14)沿用 `plans/` 資料夾名稱;15 為新增,見 [`docs/adr/0011-stripe-provider-coexist.md`](../../docs/adr/0011-stripe-provider-coexist.md)。「順序」欄為依賴拓樸後的建議實作順序。

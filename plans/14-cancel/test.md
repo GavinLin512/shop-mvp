@@ -4,10 +4,10 @@
 
 ## 任務 Checklist
 
-- [ ] 1. 取消設期末旗標、狀態仍 ACTIVE [tracer bullet]
-- [ ] 2. 重複取消冪等
-- [ ] 3. 到期由 billing-cron 轉 CANCELED(跨 12)
-- [ ] 4. 授權邊界
+- [x] 1. 取消設期末旗標、狀態仍 ACTIVE [tracer bullet]
+- [x] 2. 重複取消冪等
+- [x] 3. 到期由 billing-cron 轉 CANCELED(跨 12)
+- [x] 4. 授權邊界
 
 ## 行為清單(RED → GREEN,逐一)
 

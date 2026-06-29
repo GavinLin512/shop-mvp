@@ -41,5 +41,17 @@ export function createSubscriptionRouter(provider: PaymentProvider): Router {
     res.json(sub)
   })
 
+  // POST /subscriptions/:id/cancel — 期末取消（冪等，DECISION.md #9）
+  router.post('/subscriptions/:id/cancel', requireAuth, async (req, res) => {
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id
+    const sub = await service.cancel({
+      id,
+      requesterId: req.member!.id,
+      requesterRole: req.member!.role,
+    })
+
+    res.json(sub)
+  })
+
   return router
 }
