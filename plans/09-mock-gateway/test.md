@@ -4,10 +4,10 @@
 
 ## 任務 Checklist
 
-- [ ] 1. 收單回 txnId + PENDING [tracer bullet]
-- [ ] 2. callback 帶有效 HMAC 打 webhook
-- [ ] 3. 查詢 API 回交易狀態
-- [ ] 4. 成敗可控
+- [x] 1. 收單回 txnId + PENDING [tracer bullet]
+- [x] 2. callback 帶有效 HMAC 打 webhook
+- [x] 3. 查詢 API 回交易狀態
+- [x] 4. 成敗可控
 
 ## 行為清單(RED → GREEN,逐一)
 

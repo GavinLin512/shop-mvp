@@ -4,11 +4,11 @@
 
 ## 任務 Checklist
 
-- [ ] 1. 建立訂閱回 INCOMPLETE + 首單 [tracer bullet]
-- [ ] 2. 觸發扣款帶正確參數
-- [ ] 3. 授權 / 輸入邊界
-- [ ] 4. GET /subscriptions/:id 擁有者檢查
-- [ ] 5. tx 一致性(rollback)
+- [x] 1. 建立訂閱回 INCOMPLETE + 首單 [tracer bullet]
+- [x] 2. 觸發扣款帶正確參數
+- [x] 3. 授權 / 輸入邊界
+- [x] 4. GET /subscriptions/:id 擁有者檢查
+- [x] 5. tx 一致性(rollback)
 
 ## 行為清單(RED → GREEN,逐一)
 

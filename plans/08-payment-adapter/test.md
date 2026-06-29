@@ -4,9 +4,9 @@
 
 ## 任務 Checklist
 
-- [ ] 1. MockProvider.charge 回 providerTxnId [tracer bullet]
-- [ ] 2. service 只依賴介面(可注入 fake)
-- [ ] 3. POST /payments/charge 建 PENDING Payment
+- [x] 1. MockProvider.charge 回 providerTxnId [tracer bullet]
+- [x] 2. service 只依賴介面(可注入 fake)
+- [x] 3. POST /payments/charge 建 PENDING Payment
 
 ## 行為清單(RED → GREEN,逐一)
 
