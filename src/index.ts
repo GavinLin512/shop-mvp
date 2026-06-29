@@ -1,17 +1,37 @@
 import 'dotenv/config'
 import cron from 'node-cron'
+import Stripe from 'stripe'
 import { createApp } from './app'
 import { runBillingCycle } from './jobs/billingCron'
 import { runReconciliation } from './jobs/reconciliationCron'
 import { MockProvider } from './providers/MockProvider'
+import { StripeProvider } from './providers/StripeProvider'
+import type { PaymentProvider } from './providers/PaymentProvider'
 import type { GatewayStatus } from './jobs/reconciliationCron'
 
 const port = Number(process.env.PORT) || 3000
 const gatewayBaseUrl = process.env.MOCK_GATEWAY_URL ?? `http://localhost:${port}`
-const provider = new MockProvider(gatewayBaseUrl)
 
-createApp().listen(port, () => {
-  console.log(`Server listening on port ${port}`)
+// 組裝點：PAYMENT_PROVIDER=stripe 時用 Stripe，否則用 Mock（DECISION.md #8, ADR-0011）
+const paymentProviderName = process.env.PAYMENT_PROVIDER ?? 'mock'
+
+let provider: PaymentProvider
+let stripeInstance: Stripe | undefined
+
+if (paymentProviderName === 'stripe') {
+  stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY!)
+  provider = new StripeProvider(stripeInstance as unknown as import('./providers/StripeProvider').StripeClient)
+} else {
+  provider = new MockProvider(gatewayBaseUrl)
+}
+
+import type { StripeWebhooks } from './routes/stripeWebhooks'
+
+createApp({
+  paymentProvider: provider,
+  stripeWebhooks: stripeInstance?.webhooks as unknown as StripeWebhooks | undefined,
+}).listen(port, () => {
+  console.log(`Server listening on port ${port} [provider=${paymentProviderName}]`)
 })
 
 // 每小時頂點掃 nextBillingDate <= now 的訂閱續扣（DECISION.md #7）

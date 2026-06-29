@@ -1,5 +1,6 @@
 import prisma from '../lib/prisma'
 import { buildOrderKey } from '../lib/idempotency'
+import { applyPaymentOutcome } from '../services/webhookService'
 import type { PaymentProvider } from '../providers/PaymentProvider'
 
 /** 將 Date 轉為 YYYY-MM-DD 格式，作為冪等鍵的週期識別。 */
@@ -76,12 +77,17 @@ export async function runBillingCycle(
         return order
       })
 
-      await provider.charge({
+      const result = await provider.charge({
         orderId: order.id,
         amount: order.amount,
         currency: order.currency,
         idempotencyKey: order.idempotencyKey,
       })
+
+      // off-session 同步出結果（Stripe）→ 立即補正；PENDING（Mock）→ 等 webhook 非同步補
+      if (result.status !== 'PENDING') {
+        await applyPaymentOutcome(result.providerTxnId, order.id, result.status, provider)
+      }
 
       processed++
     } catch (err: unknown) {

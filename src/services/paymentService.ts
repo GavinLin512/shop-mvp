@@ -28,9 +28,10 @@ export function createPaymentService(provider: PaymentProvider) {
           orderId: input.orderId,
           amount: input.amount,
           currency: input.currency,
-          provider: 'mock',
+          provider: provider.name ?? 'mock',
           providerTxnId,
-          status: 'PENDING',
+          // off-session 同步結果；PENDING 等 webhook 補正
+          status: status === 'PENDING' ? 'PENDING' : status === 'SUCCESS' ? 'SUCCESS' : 'FAILED',
         },
       })
 

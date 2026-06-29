@@ -4,6 +4,8 @@ import authRouter from './routes/auth'
 import planRouter from './routes/plans'
 import mockGatewayRouter from './routes/mockGateway'
 import { createWebhookRouter } from './routes/webhooks'
+import { createStripeWebhookRouter } from './routes/stripeWebhooks'
+import type { StripeWebhooks } from './routes/stripeWebhooks'
 import { createPaymentRouter } from './routes/payments'
 import { createSubscriptionRouter } from './routes/subscriptions'
 import { MockProvider } from './providers/MockProvider'
@@ -13,6 +15,11 @@ import { AppError } from './lib/errors'
 type AppOptions = {
   /** 注入 PaymentProvider，預設使用 MockProvider（測試可傳 fake）。 */
   paymentProvider?: PaymentProvider
+  /**
+   * 注入 Stripe webhooks client（stripe.webhooks），用於掛載 /webhooks/stripe。
+   * 提供時才掛載 Stripe webhook 路由；測試可傳 stub。
+   */
+  stripeWebhooks?: StripeWebhooks
 }
 
 // createApp 不自動 listen，讓 supertest 可在測試中直接使用
@@ -22,6 +29,11 @@ export function createApp(options: AppOptions = {}): Express {
 
   // webhook 路由必須在 express.json() 前掛載，才能拿到 raw body 做驗簽（ADR-0002）
   app.use(createWebhookRouter(provider))
+
+  // Stripe webhook 路由（同樣需 express.raw，掛在 express.json() 前）
+  if (options.stripeWebhooks) {
+    app.use(createStripeWebhookRouter(options.stripeWebhooks, provider))
+  }
 
   app.use(express.json())
   app.use(healthRouter)

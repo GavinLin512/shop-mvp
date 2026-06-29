@@ -33,6 +33,13 @@ function verifySignature(rawBody: Buffer, signature: string): void {
   }
 }
 
+type ApplyOptions = {
+  /** Payment.provider 欄位；未傳時取 provider.name，再退 'mock'。 */
+  providerName?: string
+  /** Stripe 首期成功時寫入 Subscription，讓續扣可用已存卡。 */
+  providerPaymentMethodId?: string
+}
+
 /**
  * 冪等 + 三表同 tx 更新 + dunning 重試。
  * 供 webhook 路由與對帳 cron 共用，確保兩邊不會重複更新（DECISION.md #3）。
@@ -43,7 +50,10 @@ export async function applyPaymentOutcome(
   orderId: string,
   status: 'SUCCESS' | 'FAILED',
   provider: PaymentProvider,
+  options?: ApplyOptions,
 ): Promise<void> {
+  const providerName = options?.providerName ?? provider.name ?? 'mock'
+  const providerPaymentMethodId = options?.providerPaymentMethodId
   // Step 1: 冪等 — providerTxnId 已非 PENDING 表示已處理過
   const existing = await prisma.payment.findFirst({
     where: { providerTxnId: txnId },
@@ -73,7 +83,7 @@ export async function applyPaymentOutcome(
           orderId,
           amount: order.amount,
           currency: order.currency,
-          provider: 'mock',
+          provider: providerName,
           providerTxnId: txnId,
           status: paymentStatus,
         },
@@ -87,13 +97,23 @@ export async function applyPaymentOutcome(
 
     if (status === 'SUCCESS') {
       if (sub.status === 'INCOMPLETE') {
-        // 首扣成功：INCOMPLETE → ACTIVE（ADR-0008）
-        await tx.subscription.update({ where: { id: sub.id }, data: { status: 'ACTIVE' } })
+        // 首扣成功：INCOMPLETE → ACTIVE（ADR-0008）；存 paymentMethodId 供續扣用
+        await tx.subscription.update({
+          where: { id: sub.id },
+          data: {
+            status: 'ACTIVE',
+            ...(providerPaymentMethodId ? { providerPaymentMethodId } : {}),
+          },
+        })
       } else if (sub.status === 'PAST_DUE') {
         // dunning 重試成功：PAST_DUE → ACTIVE，重置 retryCount（DECISION.md #5）
         await tx.subscription.update({
           where: { id: sub.id },
-          data: { status: 'ACTIVE', retryCount: 0 },
+          data: {
+            status: 'ACTIVE',
+            retryCount: 0,
+            ...(providerPaymentMethodId ? { providerPaymentMethodId } : {}),
+          },
         })
       }
       return null

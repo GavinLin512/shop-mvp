@@ -37,12 +37,13 @@ enum PaymentStatus {
 }
 
 model Member {
-  id           String     @id @default(cuid())
-  email        String     @unique
-  passwordHash String
-  tier         MemberTier @default(NORMAL)
-  role         MemberRole @default(USER)
-  createdAt    DateTime   @default(now())
+  id                 String     @id @default(cuid())
+  email              String     @unique
+  passwordHash       String
+  tier               MemberTier @default(NORMAL)
+  role               MemberRole @default(USER)
+  createdAt          DateTime   @default(now())
+  providerCustomerId String?
 
   subscriptions Subscription[]
   orders        Order[]
@@ -60,15 +61,16 @@ model Plan {
 }
 
 model Subscription {
-  id                String             @id @default(cuid())
-  memberId          String
-  planId            String
-  status            SubscriptionStatus @default(INCOMPLETE)
-  retryCount        Int                @default(0)
-  cancelAtPeriodEnd Boolean            @default(false)
-  nextBillingDate   DateTime
-  startedAt         DateTime           @default(now())
-  canceledAt        DateTime?
+  id                      String             @id @default(cuid())
+  memberId                String
+  planId                  String
+  status                  SubscriptionStatus @default(INCOMPLETE)
+  retryCount              Int                @default(0)
+  cancelAtPeriodEnd       Boolean            @default(false)
+  nextBillingDate         DateTime
+  startedAt               DateTime           @default(now())
+  canceledAt              DateTime?
+  providerPaymentMethodId String?
 
   member Member @relation(fields: [memberId], references: [id])
   plan   Plan   @relation(fields: [planId], references: [id])

@@ -5,6 +5,7 @@ import type { PaymentProvider, ChargeInput, ChargeResult } from './PaymentProvid
  * gatewayUrl 可注入，測試時傳入測試伺服器的 baseUrl。
  */
 export class MockProvider implements PaymentProvider {
+  readonly name = 'mock'
   private readonly gatewayUrl: string
 
   constructor(gatewayUrl?: string) {
