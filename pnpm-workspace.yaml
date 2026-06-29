@@ -1,5 +1,9 @@
+# 供應鏈防護:只安裝發布滿 1440 分鐘(1 天)的版本,避開剛被植入惡意碼的新版
+minimumReleaseAge: 1440
+
+# 供應鏈防護:預設拒絕所有依賴的安裝期 build script,僅放行親自審核過的套件
 allowBuilds:
-  '@prisma/engines': set this to true or false
-  '@scarf/scarf': set this to true or false
-  esbuild: set this to true or false
-  prisma: set this to true or false
+  '@prisma/engines': true   # 下載 Prisma query engine binary,功能必需
+  '@scarf/scarf': false     # 純遙測套件,封鎖
+  esbuild: true             # vitest 底層,設定原生 binary,功能必需
+  prisma: true              # postinstall 觸發 engine 設定,功能必需

@@ -62,6 +62,19 @@
 ### 金流冪等(#1)
 - `Order.idempotencyKey` 由 DB UNIQUE 保證唯一,不靠應用層先查再寫,避開 race。
 
+### 供應鏈 / 依賴安全(pnpm)
+
+設定集中於 `pnpm-workspace.yaml`,原則為**預設拒絕,只放行親自審核過的項目**。
+
+- **Build script 白名單(`allowBuilds`)**:pnpm 預設封鎖所有依賴的安裝期 lifecycle script(`preinstall` / `install` / `postinstall`),防惡意套件在 `pnpm install` 時偷跑任意程式碼。僅以 `true` 放行功能必需且已審核者:
+  - `@prisma/engines`、`prisma`、`esbuild` → `true`(必需)。
+  - `@scarf/scarf` → `false`(純遙測,封鎖)。
+  - 新套件被擋時跑 `pnpm install` 看 `ERR_PNPM_IGNORED_BUILDS` 清單,或 `pnpm approve-builds` 逐一檢視;**未審核者一律維持封鎖**,不得圖方便用 `npx` 繞過 deps check。
+- **版本冷卻期(`minimumReleaseAge: 1440`)**:只安裝發布滿 1 天的版本,避開「新版本剛被植入惡意碼」的供應鏈攻擊窗口。
+- **CI 安裝**:用 `pnpm install --frozen-lockfile`,lockfile 不符即失敗,防被偷換版本。
+- **定期稽核**:`pnpm audit` 檢查已知 CVE。
+- 不確定某 build script 是否該放行時,**寧可維持封鎖並先問**,不得直接設 `true`。
+
 ---
 
 ## 4. 遇到資安疑慮時的處置

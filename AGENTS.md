@@ -6,7 +6,7 @@
 pnpm install        # 安裝依賴
 pnpm db:migrate     # 建立/更新 DB schema
 pnpm dev            # 開發伺服器（tsx watch，熱重載）
-pnpm test           # 執行所有整合測試
+pnpm test           # 執行所有整合測試（vitest）
 pnpm build          # 編譯 TypeScript
 pnpm start          # 生產模式（需先 build）
 ```
