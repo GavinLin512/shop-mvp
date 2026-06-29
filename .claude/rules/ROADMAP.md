@@ -18,7 +18,7 @@
 | - [x] | 07 | `08-payment-adapter` PaymentProvider 介面 + Mock | 09 | — |
 | - [x] | 08 | `09-mock-gateway` /mock-gateway/* + HMAC + webhook 回打 | — | — |
 | - [x] | 09 | `07-subscription` POST /subscriptions → INCOMPLETE | 04-plans, 06, 08 | #8 |
-| - [ ] | 10 | `10-webhook` /webhooks/payment 驗簽→冪等→更新 ★核心 | 07, 09 | #2, #8 |
+| - [x] | 10 | `10-webhook` /webhooks/payment 驗簽→冪等→更新 ★核心 | 07, 09 | #2, #8 |
 | - [ ] | 11 | `12-billing-cron` nextBillingDate <= now 逐筆 tx | 06, 07, 08 | #7 |
 | - [ ] | 12 | `11-dunning` 失敗重試 + retryCount + 3 次轉 CANCELED | 10, 12-billing | #5 |
 | - [ ] | 13 | `13-reconciliation` 對帳 cron + 查詢 API [SHOULD] | 09, 10 | #3 |

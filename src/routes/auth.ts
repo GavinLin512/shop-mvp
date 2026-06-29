@@ -2,7 +2,7 @@ import { Router } from 'express'
 import * as z from 'zod'
 import { authService } from '../services/authService'
 
-const router = Router()
+const router: Router = Router()
 
 const registerSchema = z.object({
   email: z.email(),

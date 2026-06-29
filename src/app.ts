@@ -3,6 +3,7 @@ import healthRouter from './routes/health'
 import authRouter from './routes/auth'
 import planRouter from './routes/plans'
 import mockGatewayRouter from './routes/mockGateway'
+import webhookRouter from './routes/webhooks'
 import { createPaymentRouter } from './routes/payments'
 import { createSubscriptionRouter } from './routes/subscriptions'
 import { MockProvider } from './providers/MockProvider'
@@ -18,6 +19,9 @@ type AppOptions = {
 export function createApp(options: AppOptions = {}): Express {
   const app = express()
   const provider = options.paymentProvider ?? new MockProvider()
+
+  // webhook 路由必須在 express.json() 前掛載，才能拿到 raw body 做驗簽（ADR-0002）
+  app.use(webhookRouter)
 
   app.use(express.json())
   app.use(healthRouter)

@@ -4,7 +4,7 @@ import { requireAuth, requireRole } from '../middlewares/auth'
 import { planService } from '../services/planService'
 import { isValidCurrency } from '../lib/money'
 
-const router = Router()
+const router: Router = Router()
 
 const createPlanSchema = z.object({
   name: z.string().min(1),

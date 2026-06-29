@@ -4,12 +4,12 @@
 
 ## 任務 Checklist
 
-- [ ] 1. 有效簽章 + 成功 → INCOMPLETE 轉 ACTIVE [tracer bullet]
-- [ ] 2. 簽章錯誤 → 401,狀態不變
-- [ ] 3. 重送相同 providerTxnId → 冪等
-- [ ] 4. 失敗 webhook 對 INCOMPLETE → CANCELED
-- [ ] 5. 三表同 tx(rollback)
-- [ ] 6. raw body 驗簽
+- [x] 1. 有效簽章 + 成功 → INCOMPLETE 轉 ACTIVE [tracer bullet]
+- [x] 2. 簽章錯誤 → 401,狀態不變
+- [x] 3. 重送相同 providerTxnId → 冪等
+- [x] 4. 失敗 webhook 對 INCOMPLETE → CANCELED
+- [x] 5. 三表同 tx(rollback)
+- [x] 6. raw body 驗簽
 
 ## 行為清單(RED → GREEN,逐一)
 

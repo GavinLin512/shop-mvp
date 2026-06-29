@@ -32,7 +32,7 @@ function resolveOutcome(amount: number): 'SUCCESS' | 'FAILED' {
   return amount % 100 === 1 ? 'FAILED' : 'SUCCESS'
 }
 
-const router = Router()
+const router: Router = Router()
 
 // POST /mock-gateway/charge
 // body: { orderId, amount, currency, idempotencyKey, _callbackUrl? }
