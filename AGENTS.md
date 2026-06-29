@@ -2,6 +2,7 @@
 
 ## Rules 索引
 
+- [`.claude/rules/ROADMAP.md`](.claude/rules/ROADMAP.md) — plans 各任務完成狀態與實作順序
 - [`.claude/rules/ARCHITECTURE.md`](.claude/rules/ARCHITECTURE.md) — 專案架構分層與資料流
 - [`.claude/rules/DECISION.md`](.claude/rules/DECISION.md) — 核心設計決策、冪等鍵、Webhook 順序、多幣別、範圍取捨
 - [`.claude/rules/preferences.md`](.claude/rules/preferences.md) — 個人偏好設定
@@ -11,12 +12,14 @@
 
 ## 實作工作流程
 
+- **開始任何任務前,先讀 [`.claude/rules/ROADMAP.md`](.claude/rules/ROADMAP.md)** 確認目前進度,從第一個未打勾的任務接續。
 - `plans/` 底下每個子資料夾(如 `00-foundation`、`06-idempotency`)各代表一個獨立任務。
 - 每個任務固定包含兩份文件:
   - `spec.md` — 該任務的規格與實作內容。
   - `test.md` — 該任務的測試。
 - 實作順序:先依 `spec.md` 完成實作,**完成後必須接著做 `test.md`**。`test.md` 未完成,該任務不算結束。
 - **`test.md` 的 checklist 在測試通過後必須逐項打勾**(`- [ ]` → `- [x]`)。
+- **任務完成(`spec.md` 實作 + `test.md` 全綠)後,必須回 [`.claude/rules/ROADMAP.md`](.claude/rules/ROADMAP.md) 把該列狀態打勾**(`- [ ]` → `- [x]`)。
 
 ## 實作前必讀
 
