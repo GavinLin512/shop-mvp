@@ -14,7 +14,7 @@
 | - [x] | 03 | `03-rbac` requireAuth / requireRole | 02 | #6 |
 | - [x] | 04 | `05-money` 最小單位整數 + ISO4217 格式化 | — | #4 |
 | - [x] | 05 | `04-plans` GET/POST /plans | 03, 05-money | #6 |
-| - [ ] | 06 | `06-idempotency` 決定性冪等鍵 + UNIQUE | — | #1 |
+| - [x] | 06 | `06-idempotency` 決定性冪等鍵 + UNIQUE | — | #1 |
 | - [ ] | 07 | `08-payment-adapter` PaymentProvider 介面 + Mock | 09 | — |
 | - [ ] | 08 | `09-mock-gateway` /mock-gateway/* + HMAC + webhook 回打 | — | — |
 | - [ ] | 09 | `07-subscription` POST /subscriptions → INCOMPLETE | 04-plans, 06, 08 | #8 |

@@ -4,10 +4,10 @@
 
 ## 任務 Checklist
 
-- [ ] 1. key 生成具決定性 [tracer bullet,單元]
-- [ ] 2. 重試 key 與原 key 不同 [單元]
-- [ ] 3. 相同 idempotencyKey 插入只留一筆 [整合,真 DB]
-- [ ] 4. 不同 key 各自建立 [整合]
+- [x] 1. key 生成具決定性 [tracer bullet,單元]
+- [x] 2. 重試 key 與原 key 不同 [單元]
+- [x] 3. 相同 idempotencyKey 插入只留一筆 [整合,真 DB]
+- [x] 4. 不同 key 各自建立 [整合]
 
 ## 行為清單(RED → GREEN,逐一)
 
