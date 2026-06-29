@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum MemberRole {
+  USER
+  ADMIN
+}
+
+enum MemberTier {
+  NORMAL
+  VIP
+}
+
+enum SubscriptionStatus {
+  INCOMPLETE
+  ACTIVE
+  PAST_DUE
+  CANCELED
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+model Member {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String
+  tier         MemberTier @default(NORMAL)
+  role         MemberRole @default(USER)
+  createdAt    DateTime   @default(now())
+
+  subscriptions Subscription[]
+  orders        Order[]
+}
+
+model Plan {
+  id           String  @id @default(cuid())
+  name         String
+  amount       Int
+  currency     String
+  intervalDays Int
+  active       Boolean @default(true)
+
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id                String             @id @default(cuid())
+  memberId          String
+  planId            String
+  status            SubscriptionStatus @default(INCOMPLETE)
+  retryCount        Int                @default(0)
+  cancelAtPeriodEnd Boolean            @default(false)
+  nextBillingDate   DateTime
+  startedAt         DateTime           @default(now())
+  canceledAt        DateTime?
+
+  member Member @relation(fields: [memberId], references: [id])
+  plan   Plan   @relation(fields: [planId], references: [id])
+  orders Order[]
+}
+
+model Order {
+  id             String      @id @default(cuid())
+  memberId       String
+  subscriptionId String?
+  amount         Int
+  currency       String
+  status         OrderStatus @default(PENDING)
+  idempotencyKey String      @unique
+  createdAt      DateTime    @default(now())
+
+  member       Member        @relation(fields: [memberId], references: [id])
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id])
+  payments     Payment[]
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  orderId       String
+  amount        Int
+  currency      String
+  provider      String
+  providerTxnId String?
+  status        PaymentStatus @default(PENDING)
+  rawPayload    Json?
+  createdAt     DateTime      @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
+}

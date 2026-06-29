@@ -4,9 +4,9 @@
 
 ## 任務 Checklist
 
-- [ ] 1. app 可啟動,健康檢查回 200 [tracer bullet]
-- [ ] 2. Prisma 能連線且 5 張表存在
-- [ ] 3. Order.idempotencyKey UNIQUE constraint 存在
+- [x] 1. app 可啟動,健康檢查回 200 [tracer bullet]
+- [x] 2. Prisma 能連線且 5 張表存在
+- [x] 3. Order.idempotencyKey UNIQUE constraint 存在
 
 ## 行為清單(RED → GREEN,逐一)
 
