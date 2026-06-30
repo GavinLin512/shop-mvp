@@ -130,7 +130,7 @@ pnpm dev
 
 伺服器啟動後：
 - API：`http://localhost:3000`
-- Swagger UI：`http://localhost:3000/api-docs`（實作後可用）
+- Swagger UI：`http://localhost:3000/api-docs`
 
 ### 其他指令
 

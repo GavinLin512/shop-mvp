@@ -2,7 +2,7 @@
 
 ## 目標
 以現有 Zod schema 為單一真相來源,自動產生 OpenAPI 文件,並用 `swagger-ui-express`
-在 `/docs` 提供可互動 UI。受保護端點透過 Bearer Authorize 可在 UI 內直接打通。
+在 `/api-docs` 提供可互動 UI。受保護端點透過 Bearer Authorize 可在 UI 內直接打通。
 
 ## 決策(本任務定調)
 - **spec 產生方式 = Zod 衍生**:用 `@asteasolutions/zod-to-openapi` 從 Zod schema 生 spec,
@@ -46,9 +46,9 @@
 
 ### 5. 掛載(src/app.ts)
 - 在 `express.json()` **之後**新增:
-  - `GET /docs` → `swaggerUi.serve` + `swaggerUi.setup(document)`(互動 UI)。
-  - `GET /docs/openapi.json` → 回原始 spec(供測試與外部工具)。
-- `/docs` 為公開路由,不掛 `requireAuth`。
+  - `GET /api-docs` → `swaggerUi.serve` + `swaggerUi.setup(document)`(互動 UI)。
+  - `GET /api-docs/openapi.json` → 回原始 spec(供測試與外部工具)。
+- `/api-docs` 為公開路由,不掛 `requireAuth`。
 - 不影響既有 webhook(json 之前掛載)與錯誤中介。
 
 ## 文件化的端點(僅對外)
@@ -65,8 +65,8 @@
 | GET | /health | — |
 
 ## 公開介面
-- `GET /docs`(Swagger UI HTML)
-- `GET /docs/openapi.json`(OpenAPI 3.1 JSON)
+- `GET /api-docs`(Swagger UI HTML)
+- `GET /api-docs/openapi.json`(OpenAPI 3.1 JSON)
 - `src/openapi/document.ts` 匯出 `openapiDocument`
 
 ## 範圍外
@@ -75,10 +75,10 @@
 - 不做 spec 版本管理 / 多語系 / 自動 client 產生。
 
 ## 完成準則
-- `GET /docs/openapi.json` 回 200 且為合法 OpenAPI 3.1。
+- `GET /api-docs/openapi.json` 回 200 且為合法 OpenAPI 3.1。
 - spec 含上表 9 條路徑,且**不含** mock-gateway / webhook。
 - `bearerAuth` securityScheme 存在,受保護端點有引用。
-- `GET /docs` 回 200 且為 Swagger UI 頁面。
+- `GET /api-docs` 回 200 且為 Swagger UI 頁面。
 - route 改用共用 schema 後,既有整合測試全綠(驗證行為不回歸)。
 
 ## 依賴

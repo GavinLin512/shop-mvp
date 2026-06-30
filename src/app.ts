@@ -1,4 +1,5 @@
 import express, { Express, NextFunction, Request, Response } from 'express'
+import swaggerUi from 'swagger-ui-express'
 import healthRouter from './routes/health'
 import authRouter from './routes/auth'
 import planRouter from './routes/plans'
@@ -11,6 +12,7 @@ import { createSubscriptionRouter } from './routes/subscriptions'
 import { MockProvider } from './providers/MockProvider'
 import type { PaymentProvider } from './providers/PaymentProvider'
 import { AppError } from './lib/errors'
+import { openapiDocument } from './openapi/document'
 
 type AppOptions = {
   /** 注入 PaymentProvider，預設使用 MockProvider（測試可傳 fake）。 */
@@ -36,6 +38,13 @@ export function createApp(options: AppOptions = {}): Express {
   }
 
   app.use(express.json())
+
+  // Swagger UI — 公開路由，不掛 requireAuth
+  app.get('/api-docs/openapi.json', (_req, res) => {
+    res.json(openapiDocument)
+  })
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiDocument))
+
   app.use(healthRouter)
   app.use(authRouter)
   app.use(planRouter)

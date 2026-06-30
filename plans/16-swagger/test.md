@@ -5,17 +5,17 @@
 
 ## 任務 Checklist
 
-- [ ] 1. `GET /docs/openapi.json` 回 200 且為合法 OpenAPI 3.1
-- [ ] 2. spec 含全部 9 條對外路徑
-- [ ] 3. spec **不含** mock-gateway / webhook 路徑
-- [ ] 4. `bearerAuth` securityScheme 存在,受保護端點有引用
-- [ ] 5. `GET /docs` 回 200 且為 Swagger UI 頁面
-- [ ] 6. schema 搬家後既有整合測試全綠(無回歸)
+- [x] 1. `GET /api-docs/openapi.json` 回 200 且為合法 OpenAPI 3.1
+- [x] 2. spec 含全部 9 條對外路徑
+- [x] 3. spec **不含** mock-gateway / webhook 路徑
+- [x] 4. `bearerAuth` securityScheme 存在,受保護端點有引用
+- [x] 5. `GET /api-docs` 回 200 且為 Swagger UI 頁面
+- [x] 6. schema 搬家後既有整合測試全綠(無回歸)
 
 ## 行為清單(RED → GREEN,逐一)
 
 ### 1. openapi.json 合法
-- **When** `GET /docs/openapi.json`
+- **When** `GET /api-docs/openapi.json`
 - **Then** 200;body `openapi` 以 `3.1` 開頭,具 `info.title` / `info.version` / `paths`。
 
 ### 2. 含全部對外路徑
@@ -36,7 +36,7 @@
   帶 `security: [{ bearerAuth: [] }]`;`/health`、`/plans`(GET)不帶。
 
 ### 5. Swagger UI 可開
-- **When** `GET /docs/`
+- **When** `GET /api-docs/`
 - **Then** 200,`content-type` 含 `text/html`,body 含 `swagger-ui`。
 
 ### 6. 無回歸
@@ -46,5 +46,5 @@
 
 ## 注意
 - 本任務測試**不需** DB 業務資料,但 6 走真 DB(沿用既有測試)。
-- `GET /docs` 注意尾斜線:swagger-ui-express 對 `/docs` 會 301 轉 `/docs/`,測試打 `/docs/`。
+- `GET /api-docs` 注意尾斜線:swagger-ui-express 對 `/api-docs` 會 301 轉 `/api-docs/`,測試打 `/api-docs/`。
 - 驗 OpenAPI 合法性可用簡單結構斷言即可,不強制引入 validator 套件(避免再加依賴)。
