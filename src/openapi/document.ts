@@ -10,5 +10,6 @@ export const openapiDocument: object = generator.generateDocument({
     title: 'shop-mvp',
     version: '1.0.0',
   },
-  servers: [{ url: 'http://localhost:3000', description: 'Local dev server' }],
+  // 相對路徑：Swagger UI 自動對齊文件頁的網域，本機/部署皆通用，Try it out 不寫死 host
+  servers: [{ url: '/', description: 'Same-origin' }],
 })

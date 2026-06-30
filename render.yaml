@@ -1,0 +1,35 @@
+# Render Blueprint — shop-mvp 後端（Express 5 + Prisma 7 + node-cron）
+# 部署：Render Dashboard → New → Blueprint → 連結此 GitHub repo，自動讀取本檔。
+#
+# 機密（sync: false）需在 Dashboard 手動填入，不寫進 git：
+#   DATABASE_URL   Neon production 分支連線字串
+#   JWT_SECRET     openssl rand -base64 48
+#   WEBHOOK_SECRET openssl rand -hex 32
+services:
+  - type: web
+    name: shop-mvp-api
+    runtime: node
+    region: singapore # 近台灣
+    plan: free        # node-cron 需常駐；free 閒置會休眠（cron 暫停），正式建議改 starter
+    branch: main
+    autoDeploy: true
+    healthCheckPath: /health
+    # corepack 啟用 packageManager 指定的 pnpm@11；frozen-lockfile 防被偷換版本
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
+    # migrate deploy 只套用已存在的 migration（不 reset），冪等；每次部署先遷移再啟動
+    startCommand: pnpm prisma migrate deploy && pnpm start
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      - key: PAYMENT_PROVIDER
+        value: mock
+      - key: DEMO_MODE
+        value: "false" # 正式環境維持 false（SECURITY.md）；純展示要開 Demo 面板才改 true
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: WEBHOOK_SECRET
+        sync: false
