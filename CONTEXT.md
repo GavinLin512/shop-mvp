@@ -30,6 +30,9 @@
 | idempotencyKey | 伺服器端決定且具決定性的冪等鍵,DB UNIQUE | request id、nonce |
 | dunning | 扣款失敗後建新單重試的流程 | retry flow |
 | reconciliation | 對帳:掃 PENDING Payment 主動查 gateway 補狀態 | sync |
+| 種子資料 (seed data) | seed script 建立的固定 demo baseline(會員 + Plan),`isSeed` 標記,demo reset 時保留 | fixture、test data |
+| demo reset | ADMIN 操作:清除所有訂閱類資料與非種子的會員/Plan,回到種子 baseline 的乾淨起點 | factory reset、wipe |
+| demo control(展示控制台) | ADMIN-only、受 demo 開關保護的觀測/觸發工具,用來現場重現既有流程的邊界條件,非正式業務功能 | admin tools |
 
 ## 角色與權限(authn vs authz)
 
