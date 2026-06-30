@@ -67,7 +67,16 @@ export function createStripeWebhookRouter(
   return router
 }
 
-async function resolveOrderId(piId: string): Promise<string | null> {
+/**
+ * 由 PaymentIntent 反查內部 orderId：
+ * 1. 首選 PI metadata.orderId（首扣時尚無 Payment，靠它對應）。
+ * 2. fallback 既有 Payment.providerTxnId（續扣已由 paymentService 建 Payment）。
+ */
+async function resolveOrderId(pi: Record<string, unknown>): Promise<string | null> {
+  const metaOrderId = (pi['metadata'] as Record<string, string> | undefined)?.orderId
+  if (metaOrderId) return metaOrderId
+
+  const piId = pi['id'] as string
   const payment = await prisma.payment.findFirst({
     where: { providerTxnId: piId },
     select: { orderId: true },
@@ -82,7 +91,7 @@ async function handleStripeSuccess(
   const piId = pi['id'] as string
   const paymentMethodId = pi['payment_method'] as string | null | undefined
 
-  const orderId = await resolveOrderId(piId)
+  const orderId = await resolveOrderId(pi)
   if (!orderId) return // 不在我們系統中的 PI，忽略
 
   await applyPaymentOutcome(piId, orderId, 'SUCCESS', provider, {
@@ -97,7 +106,7 @@ async function handleStripeFailure(
 ): Promise<void> {
   const piId = pi['id'] as string
 
-  const orderId = await resolveOrderId(piId)
+  const orderId = await resolveOrderId(pi)
   if (!orderId) return
 
   await applyPaymentOutcome(piId, orderId, 'FAILED', provider, { providerName: 'stripe' })

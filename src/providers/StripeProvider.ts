@@ -67,6 +67,7 @@ export class StripeProvider implements PaymentProvider {
     }
 
     return this.chargeFirst({
+      orderId,
       memberId: order.member.id,
       email: order.member.email,
       existingCustomerId: order.member.providerCustomerId ?? null,
@@ -78,6 +79,7 @@ export class StripeProvider implements PaymentProvider {
 
   /** 首期：建 Customer（若未建）+ PaymentIntent(setup_future_usage:'off_session')。 */
   private async chargeFirst(params: {
+    orderId: string
     memberId: string
     email: string
     existingCustomerId: string | null
@@ -105,6 +107,12 @@ export class StripeProvider implements PaymentProvider {
         currency: params.currency.toLowerCase(),
         customer: customerId,
         setup_future_usage: 'off_session',
+        // 只收不跳轉的付款方式（卡），排除 redirect-based methods，
+        // confirm 時免帶 return_url（否則 Stripe 預設啟用 Dashboard 全部方式而要求 return_url）
+        automatic_payment_methods: { enabled: true, allow_redirects: 'never' },
+        // 把內部 orderId 寫進 metadata，讓 /webhooks/stripe 能由 PI 反查 Order
+        // （首扣此時尚未建 Payment，無法靠 providerTxnId 反查，ADR-0011 webhook 補正）
+        metadata: { orderId: params.orderId },
       },
       { idempotencyKey: params.idempotencyKey },
     )
