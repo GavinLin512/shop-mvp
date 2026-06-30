@@ -1,6 +1,6 @@
 # 0011 — StripeProvider 與 Mock 並存(自管續扣,不用 Stripe 原生 Subscription)
 
-- 狀態:Accepted
+- 狀態:Accepted(#6「無前端切換鈕、純 env 選 provider」於 2026-06-30 被 **ADR-0013** 取代;其餘仍有效)
 - 日期:2026-06-29
 - 相關:DECISION.md #8(adapter)、#7(續扣 cron)、#5(dunning)、#2(webhook)、#1(冪等);ADR-0002、ADR-0005、ADR-0007、ADR-0008;`CONTEXT.md`
 

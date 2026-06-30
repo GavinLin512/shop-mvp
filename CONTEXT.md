@@ -24,7 +24,8 @@
 | Payment | 對某 Order 的一次扣款嘗試,帶 `providerTxnId` | transaction、charge |
 | PaymentProvider | 金流商介面;service 只依賴它,換金流商只實作新 Provider | gateway client |
 | mock-gateway | 預設/測試用的假金流商,可控成敗並回打 webhook(Mock provider 的後端) | — |
-| StripeProvider | 真實金流的 PaymentProvider 實作,與 Mock 並存,由 env 選用(ADR-0011) | stripe gateway |
+| StripeProvider | 真實金流的 PaymentProvider 實作,與 Mock 並存(ADR-0011);ADR-0013 起改由 ProviderRegistry 後台即時選用 | stripe gateway |
+| ProviderRegistry | 持有各 PaymentProvider 實作的登錄器:`current()` 給新訂閱、`get(name)` 給 cron 依 `Subscription.provider` 取用、`setCurrent()` 後台切換(ADR-0013) | provider factory、selector |
 | off-session 續扣 | 用已存的 PaymentMethod、免使用者在場的自動扣款,cron 驅動 | auto-charge、recurring charge |
 | webhook | 金流商非同步回打的狀態通知,需 HMAC 驗簽 | callback(僅指 gateway 內部觸發) |
 | idempotencyKey | 伺服器端決定且具決定性的冪等鍵,DB UNIQUE | request id、nonce |
