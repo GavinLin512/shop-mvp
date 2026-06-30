@@ -8,14 +8,14 @@
 
 ## 任務 Checklist
 
-- [ ] 1. `formatCurrency` 依幣別 exponent 正確
-- [ ] 2. `StatusBadge` 狀態 → 顏色對應正確
-- [ ] 3. 登入成功存 token,依 role 切視圖(USER→前台 / ADMIN→後台)
-- [ ] 4. 訂閱後輪詢:INCOMPLETE → ACTIVE 會自動更新 Badge
-- [ ] 5. 取消後維持 ACTIVE + 顯示「期末取消」(不變 CANCELED)
-- [ ] 6. 未登入打受保護動作不送出(導回登入)
-- [ ] 7. 後台建立 Plan:表單送出呼叫 `POST /plans`
-- [ ] 8. 後台查任一訂閱:輸入 id → 顯示該訂閱狀態
+- [x] 1. `formatCurrency` 依幣別 exponent 正確
+- [x] 2. `StatusBadge` 狀態 → 顏色對應正確
+- [x] 3. 登入成功存 token,依 role 切視圖(USER→前台 / ADMIN→後台)
+- [x] 4. 訂閱後輪詢:INCOMPLETE → ACTIVE 會自動更新 Badge
+- [x] 5. 取消後維持 ACTIVE + 顯示「期末取消」(不變 CANCELED)
+- [x] 6. 未登入打受保護動作不送出(導回登入)
+- [x] 7. 後台建立 Plan:表單送出呼叫 `POST /plans`
+- [x] 8. 後台篩選方案:掛載呼叫 `GET /plans` 列出方案;輸入關鍵字即時過濾
 
 ## 行為清單(RED → GREEN,逐一)
 
@@ -60,10 +60,10 @@
 - **When** 填 name/amount/currency/intervalDays 送出
 - **Then** 以 Bearer 呼叫 `POST /api/plans`,送出 body 欄位正確,成功後顯示新方案。
 
-### 8. 後台查任一訂閱
-- **Given** ADMIN 登入;mock `GET /api/subscriptions/:id` 回某訂閱
-- **When** 輸入 subId 查詢
-- **Then** 顯示該訂閱狀態 Badge(驗證帶 Bearer、admin 可查他人)。
+### 8. 後台篩選方案
+- **Given** ADMIN 登入;mock `GET /api/plans` 回方案清單
+- **When** 元件掛載、並在篩選框輸入關鍵字
+- **Then** 先列出全部方案(以 Bearer 呼叫 `GET /plans`),輸入關鍵字後只顯示名稱符合的方案。
 
 ## 注意
 - 全程 mock `fetch`(或 `api/client` 模組),不依賴真後端、零網路進 CI。

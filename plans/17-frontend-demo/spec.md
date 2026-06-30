@@ -3,7 +3,7 @@
 ## 目標
 做一個功能性 demo 前端,**依登入者 `role` 分前台(USER)/後台(ADMIN)兩區**:
 - **前台(會員)**:登入 → Plans 列表 → 訂閱(INCOMPLETE)→ 輪詢轉 ACTIVE → 期末取消。
-- **後台(管理員)**:登入 → 建立 Plan(`POST /plans`)→ 用 ADMIN 身分查任一訂閱。
+- **後台(管理員)**:登入 → 建立 Plan(`POST /plans`)→ 列出/依名稱篩選已建立方案(`GET /plans`)。
 
 重點是「**看得到非同步狀態變化**」(INCOMPLETE 橘 → 輪詢 → ACTIVE 綠)與「**RBAC 分流**」
 (role≠tier,401/403,DECISION #6),套用 `DESIGN.md` 深色工業風。
@@ -50,13 +50,13 @@ web/
       money/*            # 共用顯示元件
     views/
       MemberView.tsx     # 前台:PlanGrid + SubscriptionPanel
-      AdminView.tsx      # 後台:CreatePlanForm + SubscriptionLookup
+      AdminView.tsx      # 後台:CreatePlanForm + PlanLookup
     components/member/
       PlanCard.tsx / PlanGrid.tsx
       SubscriptionPanel.tsx  # 狀態 Badge + 輪詢 + 取消鈕
     components/admin/
       CreatePlanForm.tsx     # name/amount/currency/intervalDays → POST /plans
-      SubscriptionLookup.tsx # 輸入 subId → GET /subscriptions/:id(admin 可查他人)
+      PlanLookup.tsx         # 名稱篩選輸入框 + PlanList(GET /plans,client 端依名稱過濾)
     lib/money.ts         # formatCurrency(amount, currency) 依 ISO4217 exponent
     styles/tokens.css    # 直接複製 DESIGN.md 色彩/字體 tokens
 ```
@@ -70,9 +70,9 @@ web/
 | 前台 | 輪詢狀態 | `GET /subscriptions/:id`(帶 Bearer) |
 | 前台 | 期末取消 | `POST /subscriptions/:id/cancel`(帶 Bearer) |
 | 後台 | 建立 Plan | `POST /plans`(帶 Bearer + ADMIN) |
-| 後台 | 查任一訂閱 | `GET /subscriptions/:id`(ADMIN 可查他人) |
+| 後台 | 列/篩選方案 | `GET /plans`(帶 Bearer;client 端依名稱過濾) |
 
-> 後端 admin 對外端點僅此二者(其餘列會員/退款等為 TALK-ONLY,範圍外)。
+> 後台對外端點僅 `POST /plans` 與 `GET /plans`(列會員/查他人訂閱/退款等為 TALK-ONLY,範圍外)。
 > 後台價值在展示 RBAC #6:USER 打 `POST /plans` 應得 **403**,可在後台順手 demo。
 
 ### 3. 跨來源處理
@@ -120,7 +120,7 @@ web/
 
 **後台(ADMIN)**
 - 建立 Plan 表單送出 → `POST /plans` 成功(201),新方案可在前台 `GET /plans` 看到。
-- 輸入訂閱 id → 用 ADMIN 身分查到他人訂閱狀態。
+- 列出已建立方案;輸入關鍵字 → 即時篩選名稱符合的方案。
 
 **視覺**
 - 套用 DESIGN.md tokens(深色 + 橘金 + display 大寫標題)。

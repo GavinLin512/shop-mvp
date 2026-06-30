@@ -132,14 +132,30 @@ pnpm dev
 - API：`http://localhost:3000`
 - Swagger UI：`http://localhost:3000/api-docs`
 
+### 5. 啟動前端 Demo（選用）
+
+需另開終端機，後端保持執行中：
+
+```bash
+pnpm --filter web dev
+```
+
+前端啟動後：
+- Demo UI：`http://localhost:5173`
+- Vite 自動代理 `/api/*` → `http://localhost:3000`（不需額外設定 CORS）
+
+登入帳號需先透過 `POST /auth/register` 建立，或直接用整合測試的 seed 資料。
+
 ### 其他指令
 
 | 指令 | 說明 |
 |------|------|
 | `pnpm build` | 編譯 TypeScript → `dist/` |
 | `pnpm start` | 生產模式（需先 build） |
-| `pnpm test` | 執行整合測試 |
+| `pnpm test` | 執行後端整合測試 |
 | `pnpm test:watch` | 監看模式執行測試 |
+| `pnpm --filter web test` | 執行前端單元測試 |
+| `pnpm --filter web build` | 編譯前端 → `web/dist/` |
 | `pnpm db:generate` | 重新產生 Prisma client |
 | `pnpm db:studio` | 開啟 Prisma Studio |
 

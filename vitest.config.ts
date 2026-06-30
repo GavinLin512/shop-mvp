@@ -10,5 +10,7 @@ export default defineConfig(({ mode }) => ({
     env: loadEnv(mode, process.cwd(), ''),
     // 共用 Neon test DB，必須循序執行避免 beforeEach TRUNCATE 互相干擾
     fileParallelism: false,
+    // web/ 子專案有獨立的 vitest.config.ts，不在根目錄跑
+    exclude: ['web/**', '**/node_modules/**'],
   },
 }))
