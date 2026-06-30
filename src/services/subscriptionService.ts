@@ -20,6 +20,30 @@ type CancelInput = {
   requesterRole: string
 }
 
+// DTO 型別：隱藏 Prisma 實作細節，只暴露 API 需要的欄位。
+export type MemberSubscriptionItem = {
+  id: string
+  status: string
+  cancelAtPeriodEnd: boolean
+  planId: string
+  planName: string
+  startedAt: string
+  nextBillingDate: string
+}
+
+export type AdminSubscriptionItem = {
+  id: string
+  memberId: string
+  memberEmail: string
+  planName: string
+  amount: number
+  currency: string
+  status: string
+  cancelAtPeriodEnd: boolean
+  startedAt: string
+  nextBillingDate: string
+}
+
 /**
  * 工廠函式 — 注入 PaymentProvider，讓測試可替換 fake provider（ARCHITECTURE.md adapter pattern）。
  */

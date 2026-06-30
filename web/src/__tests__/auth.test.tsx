@@ -30,12 +30,17 @@ describe('Login + role routing', () => {
 
   it('USER login → shows member view (PlanGrid)', async () => {
     const fetchMock = vi.fn()
+    // GET /api/config (from ConfigProvider on mount)
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ demoMode: false, provider: 'mock' }),
+    })
     // POST /api/auth/login
     fetchMock.mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve({ token: USER_TOKEN }),
     })
-    // GET /api/plans (from PlanGrid)
+    // GET /api/plans (from PlanGrid) + subsequent calls
     fetchMock.mockResolvedValue({
       ok: true,
       json: () => Promise.resolve([]),
@@ -59,12 +64,17 @@ describe('Login + role routing', () => {
 
   it('ADMIN login → shows admin view (CreatePlanForm)', async () => {
     const fetchMock = vi.fn()
+    // GET /api/config (from ConfigProvider on mount)
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ demoMode: false, provider: 'mock' }),
+    })
     // POST /api/auth/login
     fetchMock.mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve({ token: ADMIN_TOKEN }),
     })
-    // GET /api/plans (from PlanList)
+    // subsequent calls (plans, subscriptions)
     fetchMock.mockResolvedValue({
       ok: true,
       json: () => Promise.resolve([]),

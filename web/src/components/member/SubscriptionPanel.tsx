@@ -27,6 +27,13 @@ export function SubscriptionPanel({ initial, planName, onChange }: Props) {
   }
   const attemptsRef = useRef(0)
 
+  // 與父層清單輪詢同步：admin 端造成 ACTIVE→PAST_DUE→CANCELED 時，
+  // 即使本元件已停止自身輪詢，也能即時反映父層帶下來的最新狀態。
+  // 只在實際欄位變動時同步，避免每次輪詢的新物件造成多餘 render。
+  useEffect(() => {
+    setSub(initial)
+  }, [initial.status, initial.cancelAtPeriodEnd, initial.nextBillingDate])
+
   // 輪詢直到 ACTIVE 或 CANCELED，最多 POLL_MAX_ATTEMPTS 次
   useEffect(() => {
     if (sub.status === 'ACTIVE' || sub.status === 'CANCELED') return

@@ -1,3 +1,8 @@
+export interface Config {
+  demoMode: boolean
+  provider: 'mock' | 'stripe'
+}
+
 export interface Plan {
   id: string
   name: string

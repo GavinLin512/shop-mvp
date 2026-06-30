@@ -9,6 +9,7 @@ import { createStripeWebhookRouter } from './routes/stripeWebhooks'
 import type { StripeWebhooks } from './routes/stripeWebhooks'
 import { createPaymentRouter } from './routes/payments'
 import { createSubscriptionRouter } from './routes/subscriptions'
+import { createDemoControlRouter } from './routes/demoControl'
 import { MockProvider } from './providers/MockProvider'
 import type { PaymentProvider } from './providers/PaymentProvider'
 import { AppError } from './lib/errors'
@@ -45,12 +46,21 @@ export function createApp(options: AppOptions = {}): Express {
   })
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiDocument))
 
+  // GET /config — 公開端點，回傳 demoMode 與 provider（不含任何密鑰）
+  app.get('/config', (_req, res) => {
+    res.json({
+      demoMode: process.env.DEMO_MODE === 'true',
+      provider: process.env.PAYMENT_PROVIDER === 'stripe' ? 'stripe' : 'mock',
+    })
+  })
+
   app.use(healthRouter)
   app.use(authRouter)
   app.use(planRouter)
   app.use(mockGatewayRouter)
   app.use(createPaymentRouter(provider))
   app.use(createSubscriptionRouter(provider))
+  app.use(createDemoControlRouter(provider))
 
   // 全域錯誤處理：AppError → 對應狀態碼，其餘 → 500
   app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {

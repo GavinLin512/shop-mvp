@@ -51,7 +51,7 @@ export async function applyPaymentOutcome(
   status: 'SUCCESS' | 'FAILED',
   provider: PaymentProvider,
   options?: ApplyOptions,
-): Promise<void> {
+): Promise<{ applied: boolean }> {
   const providerName = options?.providerName ?? provider.name ?? 'mock'
   const providerPaymentMethodId = options?.providerPaymentMethodId
   // Step 1: 冪等 — providerTxnId 已非 PENDING 表示已處理過
@@ -59,7 +59,8 @@ export async function applyPaymentOutcome(
     where: { providerTxnId: txnId },
     select: { status: true },
   })
-  if (existing && existing.status !== 'PENDING') return
+  // 冪等早退：已非 PENDING（已處理）→ applied=false（重複，未實際處理）
+  if (existing && existing.status !== 'PENDING') return { applied: false }
 
   // Step 2: 三表同一 transaction（ADR-0008）；若需 dunning 則回傳新 retry Order
   const retryOrder = await prisma.$transaction(async (tx) => {
@@ -172,6 +173,8 @@ export async function applyPaymentOutcome(
       idempotencyKey: retryOrder.idempotencyKey,
     })
   }
+
+  return { applied: true }
 }
 
 /**
@@ -184,12 +187,12 @@ export function createWebhookService(provider: PaymentProvider) {
      * 處理 /webhooks/payment 回調
      * 順序固定（ADR-0002）：驗簽 → 冪等 → 三表同 tx 更新 → (dunning) 觸發重試扣款
      */
-    async processPaymentWebhook(rawBody: Buffer, signature: string): Promise<void> {
+    async processPaymentWebhook(rawBody: Buffer, signature: string): Promise<{ applied: boolean }> {
       // HMAC 驗簽（必須對 raw bytes，不可用已 parse 的 JSON）
       verifySignature(rawBody, signature)
 
       const { txnId, orderId, status } = JSON.parse(rawBody.toString('utf8')) as WebhookPayload
-      await applyPaymentOutcome(txnId, orderId, status, provider)
+      return applyPaymentOutcome(txnId, orderId, status, provider)
     },
   }
 }

@@ -21,8 +21,8 @@ export function createWebhookRouter(provider: PaymentProvider): Router {
       if (!Buffer.isBuffer(req.body)) {
         throw new AppError(400, 'Invalid content type')
       }
-      await service.processPaymentWebhook(req.body, signature)
-      res.json({ ok: true })
+      const { applied } = await service.processPaymentWebhook(req.body, signature)
+      res.json({ ok: true, duplicate: !applied })
     },
   )
 

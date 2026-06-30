@@ -4,7 +4,7 @@ import http from 'http'
 import type { AddressInfo } from 'net'
 import crypto from 'crypto'
 import { createApp } from '../src/app'
-import { resetStore } from '../src/routes/mockGateway'
+import { resetStore, setForceFail } from '../src/routes/mockGateway'
 
 const app = createApp()
 
@@ -91,14 +91,15 @@ describe('09-mock-gateway', () => {
     })
   })
 
-  describe('4. 成敗可控', () => {
-    it('一般 amount → callback status=SUCCESS', async () => {
+  describe('4. 成敗可控（force-fail 全域旗標）', () => {
+    it('forceFail=false → callback status=SUCCESS', async () => {
       const { body } = await captureCallback(baseCharge)
       expect(JSON.parse(body).status).toBe('SUCCESS')
     })
 
-    it('amount % 100 === 1 → callback status=FAILED', async () => {
-      const { body } = await captureCallback({ ...baseCharge, amount: 1001 })
+    it('forceFail=true → callback status=FAILED（ADR-0012）', async () => {
+      setForceFail(true)
+      const { body } = await captureCallback(baseCharge)
       expect(JSON.parse(body).status).toBe('FAILED')
     })
   })

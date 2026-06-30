@@ -2,8 +2,11 @@ import React, { useState } from 'react'
 import { CreatePlanForm } from '../components/admin/CreatePlanForm'
 import { PlanLookup } from '../components/admin/PlanLookup'
 import { AdminSubscriptionList } from '../components/admin/AdminSubscriptionList'
+import { DemoControlPanel } from '../components/admin/DemoControlPanel'
+import { useConfig } from '../lib/ConfigContext'
 
 export function AdminView() {
+  const { demoMode } = useConfig()
   const [planRefreshKey, setPlanRefreshKey] = useState(0)
 
   return (
@@ -11,6 +14,7 @@ export function AdminView() {
       <h1 className="section-title">
         ADMIN <span className="accent">PANEL</span>
       </h1>
+      {demoMode && <DemoControlPanel />}
       <div className="admin-grid">
         <section className="admin-section">
           <h2 className="admin-section-title">CREATE PLAN</h2>

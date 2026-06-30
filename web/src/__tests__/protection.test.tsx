@@ -19,13 +19,17 @@ describe('未登入保護', () => {
     expect(screen.queryByRole('button', { name: /subscribe/i })).not.toBeInTheDocument()
   })
 
-  it('無 token → fetch 不被呼叫（不嘗試打 /plans 或 /subscriptions）', () => {
-    const fetchMock = vi.fn()
+  it('無 token → 不打 /plans 或 /subscriptions（ConfigProvider 只打 /config）', () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ demoMode: false, provider: 'mock' }),
+    })
     vi.stubGlobal('fetch', fetchMock)
 
     render(<App />)
 
-    // 僅渲染 LoginForm，不觸發任何 API call
-    expect(fetchMock).not.toHaveBeenCalled()
+    // ConfigProvider 會打 /api/config，但不應打 /plans 或 /subscriptions
+    const calls = fetchMock.mock.calls.map(c => c[0] as string)
+    expect(calls.every(url => !url.includes('/plans') && !url.includes('/subscriptions'))).toBe(true)
   })
 })

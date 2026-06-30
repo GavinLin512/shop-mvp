@@ -27,6 +27,6 @@
 | - [x] | 16 | `16-swagger` Swagger UI + OpenAPI(Zod 衍生)+ Bearer 授權 [SHOULD] | 01, 02, 04, 07 | #4 |
 | - [x] | 17 | `17-frontend-demo` Vite + React demo,前台(會員:訂閱→輪詢 ACTIVE→取消)/後台(ADMIN:建方案/查訂閱)依 role 分區 [SHOULD] | 02, 04, 07, 10, 14 | #6, #8, #9 |
 | - [x] | 18 | `18-subscription-visibility` 本人隔離(`GET /subscriptions`)+ 會員訂閱歷史 + 後台訂閱清單/期末取消 [SHOULD] | 07, 14, 17 | #6, #9 |
-| - [ ] | 19 | `19-demo-control` Demo Control 面板(reset/run-billing/force-fail/replay)+ `isSeed`/seed + `DEMO_MODE` gating,provider-aware [SHOULD] | 14, 17, 18 | ADR-0012 |
+| - [x] | 19 | `19-demo-control` Demo Control 面板(reset/run-billing/force-fail/replay)+ `isSeed`/seed + `DEMO_MODE` gating,provider-aware [SHOULD] | 14, 17, 18 | ADR-0012 |
 
 > 任務編號(00–14)沿用 `plans/` 資料夾名稱;15–17 為新增。15 見 [`docs/adr/0011-stripe-provider-coexist.md`](../../docs/adr/0011-stripe-provider-coexist.md);16 見 [`plans/16-swagger/spec.md`](../../plans/16-swagger/spec.md);17 見 [`plans/17-frontend-demo/spec.md`](../../plans/17-frontend-demo/spec.md);18 見 [`plans/18-subscription-visibility/spec.md`](../../plans/18-subscription-visibility/spec.md);19 見 [`plans/19-demo-control/spec.md`](../../plans/19-demo-control/spec.md) 與 [`docs/adr/0012-demo-control-panel.md`](../../docs/adr/0012-demo-control-panel.md)。「順序」欄為依賴拓樸後的建議實作順序。

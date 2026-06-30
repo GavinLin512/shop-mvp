@@ -59,13 +59,15 @@
   最後 `Member.providerCustomerId = null where isSeed=true`(種子會員清掉 Stripe 殘留綁定)。
 - `POST /demo/run-billing` — `runBillingCycle(new Date(), provider)`,回 `{ processed, skipped }`。
 - `POST /demo/subscriptions/:id/expire` — 設該訂閱 `nextBillingDate = new Date()`(讓它到期),回更新後訂閱。
+- `GET /demo/mock/force-fail` — 回 `{ enabled }`,讓前端 reload 後還原開關狀態(避免 UI 顯示 OFF 但後端仍 ON)。
+  `provider !== 'mock'` → `409`。
 - `POST /demo/mock/force-fail`(body `{ enabled: boolean }`)— 設 mock-gateway 旗標。
   `provider !== 'mock'` → `409`(Stripe 不適用)。
 - `POST /demo/mock/replay-webhook` — 重打 mock-gateway 存的 last webhook,回 webhook 回應 `{ ok, duplicate }`。
   `provider !== 'mock'` 或無 last webhook → `409`。
 
 **A4. mock-gateway 改動**(`src/routes/mockGateway.ts`):
-- 模組層級 `let forceFail = false` + `setForceFail(b)` / 匯出;`resolveOutcome` 在 `forceFail` 為真時回 `FAILED`。
+- 模組層級 `let forceFail = false` + `setForceFail(b)` / `getForceFail()` 匯出;`resolveOutcome` 在 `forceFail` 為真時回 `FAILED`。
 - 每次回打 webhook 時把 `{ body, signature }` 存進模組層級 `lastWebhook` + 匯出 getter。
 - `resetStore()` 一併清 `forceFail` 與 `lastWebhook`(測試隔離)。
 
@@ -79,12 +81,21 @@
 
 **B1. config context**:App 掛載時 `GET /api/config` 一次,透過 context 提供 `{ demoMode, provider }`。
 **B2. api client**:`getConfig()`、`demoReset()`、`demoRunBilling()`、`demoExpire(id)`、
-`demoSetForceFail(enabled)`、`demoReplayWebhook()`。
+`demoGetForceFail()`、`demoSetForceFail(enabled)`、`demoReplayWebhook()`。
 **B3. `AdminView` 新增「DEMO CONTROL」danger-zone 區塊**(`demoMode` 為真才渲染):
 - Reset(**type-to-confirm**:輸入 `RESET` 才啟用按鈕)、Run billing now、force-fail 開關(toggle)、Replay last webhook。
 - **provider-aware**:`provider==='stripe'` 時隱藏 force-fail 與 replay,並顯示一句說明(改用測試卡)。
+- **force-fail 狀態還原**:`DemoControlPanel` 掛載時(provider=mock)呼叫 `demoGetForceFail()` 初始化開關,
+  避免 reload 後顯示 OFF 但後端仍 ON 的狀態不同步。
 **B4. `AdminSubscriptionList` 每列加「MAKE DUE」鈕**(`demoMode` 為真才顯示)→ `demoExpire(id)` 後 refetch。
 **B5. `.env.example`** 補 `DEMO_MODE=false`;`types.ts` 加 `Config` 型別。
+
+**B6. 即時更新(免手動重整)**:demo 過程中 admin 觸發的狀態變化要即時反映,沿用專案既有輪詢模式
+(非 WebSocket/SSE,對 demo 規模最划算,代價是最多延遲輪詢間隔):
+- `MemberView`:掛載後每 3 秒輪詢 `GET /subscriptions`,驅動 `SubscriptionHistory` 即時更新。
+- `SubscriptionPanel`:新增同步 effect,讓「YOUR SUBSCRIPTION」面板在自身輪詢已停(ACTIVE 後)時,
+  仍能反映父層帶下來的最新狀態,不與 history 不一致。
+- `AdminSubscriptionList`:掛載後每 3 秒輪詢 `GET /admin/subscriptions`,狀態 / next billing 即時更新。
 
 ## 範圍外
 - Stripe-native 的 force-fail / webhook replay;刪除 Stripe 端 Customer/PM/PI(test mode 殘留可接受)。

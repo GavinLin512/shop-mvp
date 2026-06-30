@@ -1,5 +1,6 @@
 import React from 'react'
 import { AuthProvider, useAuth } from './auth/AuthContext'
+import { ConfigProvider } from './lib/ConfigContext'
 import { Header } from './components/Header'
 import { LoginForm } from './components/LoginForm'
 import { MemberView } from './views/MemberView'
@@ -20,9 +21,11 @@ function AppContent() {
 
 export function App() {
   return (
-    <AuthProvider>
-      <Header />
-      <AppContent />
-    </AuthProvider>
+    <ConfigProvider>
+      <AuthProvider>
+        <Header />
+        <AppContent />
+      </AuthProvider>
+    </ConfigProvider>
   )
 }

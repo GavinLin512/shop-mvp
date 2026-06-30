@@ -1,4 +1,4 @@
-import type { MemberSubscription, AdminSubscription } from '../types'
+import type { Config, MemberSubscription, AdminSubscription } from '../types'
 
 // Bearer token 由 AuthContext 在 login/logout 時同步更新
 let _token: string | null = typeof window !== 'undefined'
@@ -55,4 +55,37 @@ export function listSubscriptions(): Promise<MemberSubscription[]> {
 // 全部訂閱清單（ADMIN 專用）
 export function listAllSubscriptions(): Promise<AdminSubscription[]> {
   return apiFetch<AdminSubscription[]>('/admin/subscriptions')
+}
+
+// --- Demo Control API（ADR-0012）---
+
+export function getConfig(): Promise<Config> {
+  return apiFetch<Config>('/config')
+}
+
+export function demoReset(): Promise<{ ok: boolean }> {
+  return apiFetch('/demo/reset', { method: 'POST' })
+}
+
+export function demoRunBilling(): Promise<{ processed: number; skipped: number }> {
+  return apiFetch('/demo/run-billing', { method: 'POST' })
+}
+
+export function demoExpire(id: string): Promise<unknown> {
+  return apiFetch(`/demo/subscriptions/${id}/expire`, { method: 'POST' })
+}
+
+export function demoGetForceFail(): Promise<{ enabled: boolean }> {
+  return apiFetch('/demo/mock/force-fail')
+}
+
+export function demoSetForceFail(enabled: boolean): Promise<{ ok: boolean; forceFail: boolean }> {
+  return apiFetch('/demo/mock/force-fail', {
+    method: 'POST',
+    body: JSON.stringify({ enabled }),
+  })
+}
+
+export function demoReplayWebhook(): Promise<{ ok: boolean; duplicate: boolean }> {
+  return apiFetch('/demo/mock/replay-webhook', { method: 'POST' })
 }

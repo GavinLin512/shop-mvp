@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { StatusBadge } from '../StatusBadge'
-import { apiFetch, listAllSubscriptions } from '../../api/client'
+import { apiFetch, listAllSubscriptions, demoExpire } from '../../api/client'
+import { useConfig } from '../../lib/ConfigContext'
 import { formatCurrency } from '../../lib/money'
 import type { AdminSubscription } from '../../types'
 
@@ -10,9 +11,11 @@ function formatDate(iso: string): string {
 }
 
 export function AdminSubscriptionList() {
+  const { demoMode } = useConfig()
   const [subscriptions, setSubscriptions] = useState<AdminSubscription[]>([])
   const [error, setError] = useState<string | null>(null)
   const [canceling, setCanceling] = useState<string | null>(null)
+  const [expiring, setExpiring] = useState<string | null>(null)
 
   const fetchList = async () => {
     try {
@@ -23,7 +26,13 @@ export function AdminSubscriptionList() {
     }
   }
 
-  useEffect(() => { fetchList() }, [])
+  // 持續輪詢：admin 跑 billing/dunning 後，清單狀態與 next billing 即時更新，免手動重整
+  // （沿用 MemberView / SubscriptionPanel 的輪詢模式）。
+  useEffect(() => {
+    fetchList()
+    const id = setInterval(fetchList, 3000)
+    return () => clearInterval(id)
+  }, [])
 
   // 取消鈕只在 ACTIVE 且未 cancelAtPeriodEnd 顯示（DECISION.md #9）
   const canCancel = (s: AdminSubscription) =>
@@ -41,17 +50,29 @@ export function AdminSubscriptionList() {
     }
   }
 
+  const handleExpire = async (id: string) => {
+    setExpiring(id)
+    try {
+      await demoExpire(id)
+      await fetchList()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Expire failed')
+    } finally {
+      setExpiring(null)
+    }
+  }
+
   if (error) return <p className="error-text">{error}</p>
 
   return (
-    <div style={{ overflowX: 'auto', width: '100%' }}>
+    <div className="table-scroll-wrap">
       {subscriptions.length === 0 ? (
         <p className="polling-note">No subscriptions found.</p>
       ) : (
         <table className="admin-table" style={{ minWidth: 'max-content', width: '100%' }}>
           <thead>
             <tr>
-              {['Member', 'Plan', 'Amount', 'Status', 'Cancel at period end', 'Started at', 'Next billing', 'Action'].map(h => (
+              {['Member', 'Plan', 'Amount', 'Status', 'Cancel at period end', 'Started at', 'Next billing', 'Action', ...(demoMode ? ['Demo'] : [])].map(h => (
                 <th key={h}>{h}</th>
               ))}
             </tr>
@@ -77,6 +98,17 @@ export function AdminSubscriptionList() {
                     </button>
                   )}
                 </td>
+                {demoMode && (
+                  <td>
+                    <button
+                      className="btn-ghost"
+                      disabled={expiring === s.id}
+                      onClick={() => handleExpire(s.id)}
+                    >
+                      {expiring === s.id ? 'EXPIRING...' : 'MAKE DUE'}
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

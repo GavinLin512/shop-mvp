@@ -19,7 +19,13 @@ export function MemberView() {
     }
   }
 
-  useEffect(() => { fetchSubs() }, [])
+  // 持續輪詢清單：讓 admin 端造成的狀態變化（dunning ACTIVE→PAST_DUE→CANCELED、期末取消）
+  // 即時反映到 history，免手動重整（沿用 SubscriptionPanel 的輪詢模式）。
+  useEffect(() => {
+    fetchSubs()
+    const id = setInterval(fetchSubs, 3000)
+    return () => clearInterval(id)
+  }, [])
 
   // index 0 為「目前訂閱」（後端已依 startedAt 新→舊排序）
   const current = subscriptions[0] ?? null

@@ -10,11 +10,36 @@ type TxnRecord = {
   status: 'PENDING' | 'SUCCESS' | 'FAILED'
 }
 
+type LastWebhook = {
+  body: string
+  signature: string
+}
+
 // 模組層級 in-memory store（測試間用 resetStore() 清空）
 const store = new Map<string, TxnRecord>()
 
+// demo-control：force-fail 全域旗標，ON 時所有扣款回 FAILED（ADR-0012）
+let forceFail = false
+
+// demo-control：最後一筆送出的 webhook（用於 replay）
+let lastWebhook: LastWebhook | null = null
+
+export function getForceFail(): boolean {
+  return forceFail
+}
+
+export function setForceFail(enabled: boolean): void {
+  forceFail = enabled
+}
+
+export function getLastWebhook(): LastWebhook | null {
+  return lastWebhook
+}
+
 export function resetStore(): void {
   store.clear()
+  forceFail = false
+  lastWebhook = null
 }
 
 function computeHmac(body: string): string {
@@ -25,11 +50,11 @@ function computeHmac(body: string): string {
 }
 
 /**
- * 成敗可控規則：amount % 100 === 1 → FAILED（測試失敗旗標），其餘 → SUCCESS。
- * 例：amount=1001 觸發失敗路徑，amount=1000 觸發成功路徑。
+ * 成敗規則：forceFail 為 true → FAILED；否則 SUCCESS。
+ * 舊的 amount % 100 技巧已廢棄，改用全域開關（ADR-0012）。
  */
-function resolveOutcome(amount: number): 'SUCCESS' | 'FAILED' {
-  return amount % 100 === 1 ? 'FAILED' : 'SUCCESS'
+function resolveOutcome(_amount: number): 'SUCCESS' | 'FAILED' {
+  return forceFail ? 'FAILED' : 'SUCCESS'
 }
 
 const router: Router = Router()
@@ -54,6 +79,9 @@ router.post('/mock-gateway/charge', (req, res) => {
   setImmediate(async () => {
     const body = JSON.stringify({ txnId, orderId, status: outcome, amount, currency })
     const signature = computeHmac(body)
+
+    // 存下最後一筆 webhook（replay 用，ADR-0012）
+    lastWebhook = { body, signature }
 
     try {
       await fetch(callbackUrl, {

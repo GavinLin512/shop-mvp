@@ -44,6 +44,7 @@ model Member {
   role               MemberRole @default(USER)
   createdAt          DateTime   @default(now())
   providerCustomerId String?
+  isSeed             Boolean    @default(false)
 
   subscriptions Subscription[]
   orders        Order[]
@@ -56,6 +57,7 @@ model Plan {
   currency     String
   intervalDays Int
   active       Boolean @default(true)
+  isSeed       Boolean @default(false)
 
   subscriptions Subscription[]
 }

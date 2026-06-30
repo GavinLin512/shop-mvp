@@ -6,20 +6,24 @@ demo 端點測試需設 `DEMO_MODE=true`(關閉路徑另測 404)。
 
 ## 任務 Checklist
 
-- [ ] 1. `GET /config` 回 `{ demoMode, provider }`,不含任何密鑰欄位
-- [ ] 2. `DEMO_MODE` 關閉時,任一 demo 端點回 **404**(連存在都不洩漏)
-- [ ] 3. demo 端點開啟但非 ADMIN → 403;未登入 → 401
-- [ ] 4. `POST /demo/reset` 清空訂閱類資料 + 非種子 Member/Plan,**保留種子列**
-- [ ] 5. `POST /demo/reset` 清空種子會員的 `providerCustomerId`
-- [ ] 6. `POST /demo/subscriptions/:id/expire` 後 `nextBillingDate <= now`
-- [ ] 7. `POST /demo/run-billing` 對「已到期 ACTIVE」訂閱建週期單(回 `processed>=1`)
-- [ ] 8. force-fail ON → 扣款走 FAILED;dunning 累加,連 3 次 → CANCELED
-- [ ] 9. force-fail 中途 OFF → 重試成功 → 回 ACTIVE(#5 恢復路徑)
-- [ ] 10. 重送 webhook:第一次 `duplicate:false`,重送 `duplicate:true` 且不重複扣款
-- [ ] 11. `provider!=='mock'` 時 force-fail / replay 端點回 409
-- [ ] 12. 前端:`demoMode=false` 時不渲染 DEMO CONTROL 區塊
-- [ ] 13. 前端:`provider==='stripe'` 時隱藏 force-fail / replay 鈕
-- [ ] 14. 前端:Reset 需輸入 `RESET` 才能按;每列 MAKE DUE 呼叫 expire 後 refetch
+- [x] 1. `GET /config` 回 `{ demoMode, provider }`,不含任何密鑰欄位
+- [x] 2. `DEMO_MODE` 關閉時,任一 demo 端點回 **404**(連存在都不洩漏)
+- [x] 3. demo 端點開啟但非 ADMIN → 403;未登入 → 401
+- [x] 4. `POST /demo/reset` 清空訂閱類資料 + 非種子 Member/Plan,**保留種子列**
+- [x] 5. `POST /demo/reset` 清空種子會員的 `providerCustomerId`
+- [x] 6. `POST /demo/subscriptions/:id/expire` 後 `nextBillingDate <= now`
+- [x] 7. `POST /demo/run-billing` 對「已到期 ACTIVE」訂閱建週期單(回 `processed>=1`)
+- [x] 8. force-fail ON → 扣款走 FAILED;dunning 累加,連 3 次 → CANCELED
+- [x] 9. force-fail 中途 OFF → 重試成功 → 回 ACTIVE(#5 恢復路徑)
+- [x] 10. 重送 webhook:第一次 `duplicate:false`,重送 `duplicate:true` 且不重複扣款
+- [x] 11. `provider!=='mock'` 時 force-fail / replay 端點回 409
+- [x] 12. 前端:`demoMode=false` 時不渲染 DEMO CONTROL 區塊
+- [x] 13. 前端:`provider==='stripe'` 時隱藏 force-fail / replay 鈕
+- [x] 14. 前端:Reset 需輸入 `RESET` 才能按;每列 MAKE DUE 呼叫 expire 後 refetch
+- [x] 15. `GET /demo/mock/force-fail` 反映目前旗標(預設 false;設 ON 後回 `enabled:true`)— 供前端 reload 還原開關
+- [x] 16. 前端:`DemoControlPanel` 掛載時讀回 force-fail 真實狀態初始化開關(不再 reload 後假性 OFF)
+- [x] 17. 前端即時輪詢:`MemberView` history 隨輪詢自動 ACTIVE→CANCELED,免重整
+- [x] 18. 前端即時輪詢:`AdminSubscriptionList` 隨輪詢自動更新狀態,免重整
 
 ## 行為清單(RED → GREEN,逐一)
 
