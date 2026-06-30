@@ -1,37 +1,41 @@
 import React, { useEffect, useState } from 'react'
 import { PlanGrid } from '../components/member/PlanGrid'
 import { SubscriptionPanel } from '../components/member/SubscriptionPanel'
-import type { Plan, Subscription } from '../types'
-
-const SUB_KEY = 'shop_mvp_subscription'
-const PLAN_KEY = 'shop_mvp_plan_name'
+import { SubscriptionHistory } from '../components/member/SubscriptionHistory'
+import { listSubscriptions } from '../api/client'
+import type { Plan, Subscription, MemberSubscription } from '../types'
 
 export function MemberView() {
-  const [subscription, setSubscription] = useState<Subscription | null>(() => {
+  // 後端清單為唯一來源，不再使用 localStorage（spec B2：移除 SUB_KEY/PLAN_KEY）
+  const [subscriptions, setSubscriptions] = useState<MemberSubscription[]>([])
+
+  const fetchSubs = async () => {
     try {
-      const stored = localStorage.getItem(SUB_KEY)
-      return stored ? (JSON.parse(stored) as Subscription) : null
+      const list = await listSubscriptions()
+      setSubscriptions(list)
     } catch {
-      return null
+      // 未登入或網路錯誤時清空，不中斷 UX
+      setSubscriptions([])
     }
-  })
-  const [planName, setPlanName] = useState<string>(() =>
-    localStorage.getItem(PLAN_KEY) ?? ''
-  )
+  }
 
-  useEffect(() => {
-    if (subscription) {
-      localStorage.setItem(SUB_KEY, JSON.stringify(subscription))
-    } else {
-      localStorage.removeItem(SUB_KEY)
-      localStorage.removeItem(PLAN_KEY)
-    }
-  }, [subscription])
+  useEffect(() => { fetchSubs() }, [])
 
-  const handleSubscribed = (sub: Subscription, plan: Plan) => {
-    setSubscription(sub)
-    setPlanName(plan.name)
-    localStorage.setItem(PLAN_KEY, plan.name)
+  // index 0 為「目前訂閱」（後端已依 startedAt 新→舊排序）
+  const current = subscriptions[0] ?? null
+
+  // 訂閱成功後 refetch，確保 current + history 一致
+  const handleSubscribed = async (_sub: Subscription, _plan: Plan) => {
+    await fetchSubs()
+  }
+
+  // 輪詢 / 取消時，將更新結果合併回清單（保留 planName / startedAt）
+  const handleSubChange = (updated: Subscription) => {
+    setSubscriptions(prev => {
+      if (prev.length === 0) return prev
+      const [head, ...tail] = prev
+      return [{ ...head, ...updated } as MemberSubscription, ...tail]
+    })
   }
 
   return (
@@ -40,18 +44,22 @@ export function MemberView() {
         SUBSCRIPTION <span className="accent">PLANS</span>
       </h1>
 
-      <PlanGrid onSubscribed={handleSubscribed} currentSubscription={subscription} />
+      <PlanGrid onSubscribed={handleSubscribed} currentSubscription={current} />
 
-      {subscription && (
+      {current && (
         <div style={{ marginTop: '2rem' }}>
           <SubscriptionPanel
-            key={subscription.id}
-            initial={subscription}
-            planName={planName}
-            onChange={setSubscription}
+            key={current.id}
+            initial={current as unknown as Subscription}
+            planName={current.planName}
+            onChange={handleSubChange}
           />
         </div>
       )}
+
+      <div style={{ marginTop: '2rem' }}>
+        <SubscriptionHistory subscriptions={subscriptions} />
+      </div>
     </main>
   )
 }

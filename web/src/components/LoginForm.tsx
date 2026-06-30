@@ -2,6 +2,12 @@ import React, { useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
 import { apiFetch } from '../api/client'
 
+const DEMO_ACCOUNTS = [
+  { label: 'User 1', email: 'user@demo.com',  password: 'demo1234' },
+  { label: 'User 2', email: 'user2@demo.com', password: 'demo1234' },
+  { label: 'Admin',  email: 'admin@demo.com', password: 'demo1234' },
+]
+
 export function LoginForm() {
   const { login } = useAuth()
   const [email, setEmail] = useState('')
@@ -54,6 +60,21 @@ export function LoginForm() {
             {loading ? 'SIGNING IN...' : 'SIGN IN'}
           </button>
         </form>
+
+        <div style={{ marginTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <p style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Quick fill</p>
+          {DEMO_ACCOUNTS.map(acc => (
+            <button
+              key={acc.email}
+              type="button"
+              className="btn-ghost"
+              style={{ width: '100%', fontSize: '0.75rem' }}
+              onClick={() => { setEmail(acc.email); setPassword(acc.password) }}
+            >
+              {acc.label} — {acc.email}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   )

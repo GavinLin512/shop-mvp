@@ -35,6 +35,10 @@
   --status-pending:  #e8a33d;  /* INCOMPLETE / PENDING */
   --status-warn:     #e0762e;  /* PAST_DUE */
   --status-failed:   #e05050;  /* FAILED / CANCELED */
+
+  /* 警告色 — 品牌標誌磚紅(#df390d rgb 223,57,13) */
+  /* 用途:破壞性動作提示,如 cancelAtPeriodEnd 文字、刪除確認等 */
+  --danger: #df390d;
 }
 ```
 

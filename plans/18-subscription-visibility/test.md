@@ -5,15 +5,15 @@
 
 ## 任務 Checklist
 
-- [ ] 1. `GET /subscriptions` 只回本人的 Subscription(他人資料不外洩)
-- [ ] 2. `GET /subscriptions` 依 `startedAt` 新→舊排序,item 帶 `planName`
-- [ ] 3. `GET /subscriptions` 未帶 token → 401
-- [ ] 4. `GET /admin/subscriptions` ADMIN 回全部,item 帶 `memberEmail` / `amount`
-- [ ] 5. `GET /admin/subscriptions` 一般 USER → 403
-- [ ] 6. Admin 對他人訂閱 `POST /subscriptions/:id/cancel` → 設 `cancelAtPeriodEnd=true`、status 仍 ACTIVE
-- [ ] 7. 前台 `SubscriptionHistory` 列出本人全部訂閱(plan / status / started / cancelAtPeriodEnd)
-- [ ] 8. 前台 `MemberView` 改由 `GET /subscriptions` 取數,不再讀 localStorage
-- [ ] 9. 後台 `AdminSubscriptionList` 列出全部,取消鈕只在可取消列出現,點擊呼叫 cancel 後 refetch
+- [x] 1. `GET /subscriptions` 只回本人的 Subscription(他人資料不外洩)
+- [x] 2. `GET /subscriptions` 依 `startedAt` 新→舊排序,item 帶 `planName`
+- [x] 3. `GET /subscriptions` 未帶 token → 401
+- [x] 4. `GET /admin/subscriptions` ADMIN 回全部,item 帶 `memberEmail` / `amount`
+- [x] 5. `GET /admin/subscriptions` 一般 USER → 403
+- [x] 6. Admin 對他人訂閱 `POST /subscriptions/:id/cancel` → 設 `cancelAtPeriodEnd=true`、status 仍 ACTIVE
+- [x] 7. 前台 `SubscriptionHistory` 列出本人全部訂閱(plan / status / started / cancelAtPeriodEnd)
+- [x] 8. 前台 `MemberView` 改由 `GET /subscriptions` 取數,不再讀 localStorage
+- [x] 9. 後台 `AdminSubscriptionList` 列出全部,取消鈕只在可取消列出現,點擊呼叫 cancel 後 refetch
 
 ## 行為清單(RED → GREEN,逐一)
 

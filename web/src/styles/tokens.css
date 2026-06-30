@@ -24,6 +24,9 @@
   --status-warn:     #e0762e;
   --status-failed:   #e05050;
 
+  /* 警告色(品牌磚紅，用於 cancelAtPeriodEnd 等破壞性動作提示) */
+  --danger: #df390d;
+
   /* 字體 */
   --font-display: 'Oswald', 'Anton', sans-serif;
   --font-body:    'Inter', system-ui, sans-serif;
@@ -287,7 +290,6 @@ body {
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 2rem;
-  max-width: 540px;
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -331,7 +333,7 @@ body {
 .badge--failed  { color: var(--status-failed);  border-color: var(--status-failed);  background: rgba(224,  80, 80, 0.1);  }
 .badge-cancel-note {
   font-size: 0.7rem;
-  color: var(--text-muted);
+  color: var(--danger);
   font-style: italic;
 }
 
@@ -386,14 +388,16 @@ body {
 .error-text { color: var(--status-failed); font-size: var(--small); }
 .muted-text { color: var(--text-muted); font-size: var(--small); }
 
-/* ── Admin Table ─────────────────────────────────────────── */
-.admin-table {
+/* ── Shared Table Base ───────────────────────────────────── */
+.admin-table,
+.history-table {
   width: 100%;
   border-collapse: collapse;
   font-size: var(--small);
 }
-.admin-table th {
-  text-align: left;
+.admin-table th,
+.history-table th {
+  text-align: center;
   font-family: var(--font-display);
   font-size: 0.7rem;
   text-transform: uppercase;
@@ -402,9 +406,12 @@ body {
   border-bottom: 1px solid var(--border);
   padding: 0.4rem 0.6rem;
 }
-.admin-table td {
+.admin-table td,
+.history-table td {
+  text-align: center;
   padding: 0.5rem 0.6rem;
   border-bottom: 1px solid var(--border);
   color: var(--text);
 }
-.admin-table tr:last-child td { border-bottom: none; }
+.admin-table tr:last-child td,
+.history-table tr:last-child td { border-bottom: none; }

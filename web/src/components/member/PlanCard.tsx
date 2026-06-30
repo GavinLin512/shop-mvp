@@ -19,9 +19,11 @@ export function PlanCard({ plan, onSubscribe, subscribing, isCurrent, isRecommen
 
   return (
     <div className={cardClass}>
-      {isRecommended && <span className="plan-badge plan-badge--recommended">RECOMMENDED</span>}
       {isCurrent && <span className="plan-badge plan-badge--current">YOUR PLAN</span>}
-      <h2 className="plan-name">{plan.name.toUpperCase()}</h2>
+      <div className="plan-name-row">
+        <h2 className="plan-name">{plan.name.toUpperCase()}</h2>
+        {isRecommended && <span className="plan-badge plan-badge--recommended">RECOMMENDED</span>}
+      </div>
       <p className="plan-price">{formatCurrency(plan.amount, plan.currency)}</p>
       <p className="plan-interval">
         every {plan.intervalDays} day{plan.intervalDays !== 1 ? 's' : ''}

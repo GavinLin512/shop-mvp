@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { CreatePlanForm } from '../components/admin/CreatePlanForm'
 import { PlanLookup } from '../components/admin/PlanLookup'
+import { AdminSubscriptionList } from '../components/admin/AdminSubscriptionList'
 
 export function AdminView() {
   const [planRefreshKey, setPlanRefreshKey] = useState(0)
@@ -20,6 +21,10 @@ export function AdminView() {
           <PlanLookup refreshKey={planRefreshKey} />
         </section>
       </div>
+      <section className="admin-section" style={{ marginTop: '2rem' }}>
+        <h2 className="admin-section-title">SUBSCRIPTIONS</h2>
+        <AdminSubscriptionList />
+      </section>
     </main>
   )
 }

@@ -16,7 +16,7 @@ const ACTIVE_SUB = {
   status: 'ACTIVE' as const,
   cancelAtPeriodEnd: false,
   planId: 'plan_1',
-  userId: 'user_1',
+  memberId: 'member_1',
 }
 
 describe('期末取消 UX', () => {

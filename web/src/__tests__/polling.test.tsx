@@ -17,7 +17,7 @@ const BASE_SUB = {
   status: 'INCOMPLETE' as const,
   cancelAtPeriodEnd: false,
   planId: 'plan_1',
-  userId: 'user_1',
+  memberId: 'member_1',
 }
 
 describe('Subscription polling: INCOMPLETE → ACTIVE', () => {

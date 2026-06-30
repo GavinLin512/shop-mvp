@@ -92,6 +92,53 @@ export function createSubscriptionService(provider: PaymentProvider) {
     },
 
     /**
+     * 本人訂閱清單 — 只回自己的，依 startedAt 新→舊（DECISION.md #6 本人隔離）。
+     * Join Plan 取 name，組成前端 DTO。
+     */
+    async listByMember(memberId: string): Promise<MemberSubscriptionItem[]> {
+      const subs = await prisma.subscription.findMany({
+        where: { memberId },
+        orderBy: { startedAt: 'desc' },
+        include: { plan: { select: { name: true } } },
+      })
+      return subs.map(s => ({
+        id: s.id,
+        status: s.status,
+        cancelAtPeriodEnd: s.cancelAtPeriodEnd,
+        planId: s.planId,
+        planName: s.plan.name,
+        startedAt: s.startedAt.toISOString(),
+        nextBillingDate: s.nextBillingDate.toISOString(),
+      }))
+    },
+
+    /**
+     * 全部訂閱清單（ADMIN 專用）— Join Member 取 email、Join Plan 取 name/amount/currency。
+     * 依 startedAt 新→舊。
+     */
+    async listAll(): Promise<AdminSubscriptionItem[]> {
+      const subs = await prisma.subscription.findMany({
+        orderBy: { startedAt: 'desc' },
+        include: {
+          member: { select: { email: true } },
+          plan: { select: { name: true, amount: true, currency: true } },
+        },
+      })
+      return subs.map(s => ({
+        id: s.id,
+        memberId: s.memberId,
+        memberEmail: s.member.email,
+        planName: s.plan.name,
+        amount: s.plan.amount,
+        currency: s.plan.currency,
+        status: s.status,
+        cancelAtPeriodEnd: s.cancelAtPeriodEnd,
+        startedAt: s.startedAt.toISOString(),
+        nextBillingDate: s.nextBillingDate.toISOString(),
+      }))
+    },
+
+    /**
      * 期末取消（DECISION.md #9）：設 cancelAtPeriodEnd=true，status 維持 ACTIVE。
      * 重複呼叫冪等：已標記則直接回傳，不重複寫入。
      * 實際轉 CANCELED 由 billing-cron 在 nextBillingDate 到期時執行。
