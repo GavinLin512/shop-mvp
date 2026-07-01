@@ -22,7 +22,8 @@ pnpm start          # 生產模式（需先 build）
 - [`.claude/rules/ARCHITECTURE.md`](.claude/rules/ARCHITECTURE.md) — 專案架構分層與資料流
 - [`.claude/rules/DECISION.md`](.claude/rules/DECISION.md) — 核心設計決策、冪等鍵、Webhook 順序、多幣別、範圍取捨
 - [`.claude/rules/SECURITY.md`](.claude/rules/SECURITY.md) — 資安守則:禁讀機密檔、禁危險指令、專案資安要點
-- [`.claude/rules/preferences.md`](.claude/rules/preferences.md) — 個人偏好設定
+- [`.claude/rules/PREFERENCES.md`](.claude/rules/PREFERENCES.md) — 個人偏好設定
+- [`.claude/rules/FAILURES.md`](.claude/rules/FAILURES.md) — 實測踩過的坑與解法(冪等鍵、Stripe demo)
 - [`DESIGN.md`](DESIGN.md) — demo 前端視覺系統(深色工業風)
 
 ---
