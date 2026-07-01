@@ -1,7 +1,19 @@
 # 訂閱制電商後端 API
 
+[![Frontend - Cloudflare Pages](https://img.shields.io/badge/Frontend-Cloudflare%20Pages-F38020?logo=cloudflare&logoColor=white)](https://shop-mvp.pages.dev)
+[![Backend - Render](https://img.shields.io/badge/Backend-Render-46E3B7?logo=render&logoColor=white)](https://shop-mvp.pages.dev/api/api-docs)
+[![Database - Neon](https://img.shields.io/badge/Database-Neon%20Postgres-00E599?logo=neon&logoColor=white)](https://neon.tech)
+[![API Docs - Swagger](https://img.shields.io/badge/API%20Docs-Swagger%20UI-85EA2D?logo=swagger&logoColor=black)](https://shop-mvp.pages.dev/api/api-docs)
+
 會員訂閱方案 → 系統定期自動建單 → 串接金流自動扣款 → webhook 回調更新狀態。
 一條龍展示「商模邏輯 + 金流整合 + 排程 + 冪等正確性」。
+
+## 線上 Demo
+
+| | 連結 |
+|------|------|
+| 前端(Cloudflare Pages) | https://shop-mvp.pages.dev |
+| 後端 Swagger UI(Render) | https://shop-mvp.pages.dev/api/api-docs |
 
 ## 技術棧
 
