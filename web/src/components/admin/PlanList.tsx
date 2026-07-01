@@ -26,25 +26,27 @@ export function PlanList({ refreshKey, nameFilter }: Props) {
   if (filtered.length === 0) return <p className="muted-text">{plans.length === 0 ? 'No plans yet.' : 'No matching plans.'}</p>
 
   return (
-    <table className="admin-table">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Price</th>
-          <th>Interval</th>
-          <th>ID</th>
-        </tr>
-      </thead>
-      <tbody>
-        {filtered.map(plan => (
-          <tr key={plan.id}>
-            <td>{plan.name}</td>
-            <td>{formatCurrency(plan.amount, plan.currency)}</td>
-            <td>{plan.intervalDays}d</td>
-            <td className="muted-text" title={plan.id}>{plan.id.slice(0, 8)}…</td>
+    <div className="table-scroll-wrap">
+      <table className="admin-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Price</th>
+            <th>Interval</th>
+            <th>ID</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {filtered.map(plan => (
+            <tr key={plan.id}>
+              <td>{plan.name}</td>
+              <td>{formatCurrency(plan.amount, plan.currency)}</td>
+              <td>{plan.intervalDays}d</td>
+              <td className="muted-text">{plan.id}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   )
 }
