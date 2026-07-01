@@ -1,7 +1,7 @@
 import prisma from '../lib/prisma'
 import { buildOrderKey } from '../lib/idempotency'
 import { AppError } from '../lib/errors'
-import type { PaymentProvider } from '../providers/PaymentProvider'
+import type { ProviderRegistry } from '../providers/ProviderRegistry'
 
 type CreateInput = {
   memberId: string
@@ -29,6 +29,9 @@ export type MemberSubscriptionItem = {
   planName: string
   startedAt: string
   nextBillingDate: string
+  // 續扣可觀測性：已成功扣款次數（PAID 訂單數）與最後扣款時間，讓 run-billing 的續扣看得出來。
+  billedCount: number
+  lastBilledAt: string | null
 }
 
 export type AdminSubscriptionItem = {
@@ -42,26 +45,45 @@ export type AdminSubscriptionItem = {
   cancelAtPeriodEnd: boolean
   startedAt: string
   nextBillingDate: string
+  // 續扣可觀測性：同 MemberSubscriptionItem，供後台清單顯示續扣次數。
+  billedCount: number
+  lastBilledAt: string | null
 }
 
 /**
- * 工廠函式 — 注入 PaymentProvider，讓測試可替換 fake provider（ARCHITECTURE.md adapter pattern）。
+ * 工廠函式 — 注入 ProviderRegistry，讓測試可替換 fake registry（ARCHITECTURE.md adapter pattern）。
  */
-export function createSubscriptionService(provider: PaymentProvider) {
+export function createSubscriptionService(registry: ProviderRegistry) {
   return {
     /**
      * 同一 tx 建 Subscription(INCOMPLETE) + Order(PENDING)，
      * tx commit 後才觸發扣款（DECISION.md #8：沒付錢不該 ACTIVE）。
+     * 建立時將 registry.currentName() 寫入 Subscription.provider（ADR-0013）。
+     * 回 { subscription, clientSecret? }：Stripe 首扣有 clientSecret，Mock 無。
      */
     async create({ memberId, planId }: CreateInput) {
       const plan = await prisma.plan.findUnique({ where: { id: planId } })
       if (!plan) throw new AppError(404, 'Plan not found')
       if (!plan.active) throw new AppError(400, 'Plan is inactive')
 
+      // 防重疊重複扣款：付費週期尚未結束就不可再開新訂閱（含已標期末取消的 ACTIVE）。
+      // 只有訂閱真正進入終態 CANCELED（cron 在期末翻轉）後才放行，使新訂閱自然接在舊期之後，
+      // 時間軸連續、不雙重佔用同一段期間。此守衛在 API 層強制，前端守衛只是體驗優化。
+      const inFlight = await prisma.subscription.findFirst({
+        where: {
+          memberId,
+          status: { in: ['INCOMPLETE', 'ACTIVE', 'PAST_DUE'] },
+        },
+      })
+      if (inFlight) {
+        throw new AppError(409, 'You already have an active subscription. Cancel and wait for the current period to end before subscribing again.')
+      }
+
       const now = new Date()
       const nextBillingDate = new Date(
         now.getTime() + plan.intervalDays * 24 * 60 * 60 * 1000,
       )
+      const providerName = registry.currentName()
 
       // 同 tx 確保 Subscription + Order 同時存在或同時不存在
       const { subscription, order } = await prisma.$transaction(async (tx) => {
@@ -74,6 +96,7 @@ export function createSubscriptionService(provider: PaymentProvider) {
             cancelAtPeriodEnd: false,
             nextBillingDate,
             startedAt: now,
+            provider: providerName,
           },
         })
 
@@ -93,14 +116,14 @@ export function createSubscriptionService(provider: PaymentProvider) {
       })
 
       // tx commit 後才 charge；若先 charge 再寫 DB 失敗會產生孤兒扣款（spec 注意事項）
-      await provider.charge({
+      const chargeResult = await registry.current().charge({
         orderId: order.id,
         amount: order.amount,
         currency: order.currency,
         idempotencyKey: order.idempotencyKey,
       })
 
-      return subscription
+      return { subscription, clientSecret: chargeResult.clientSecret }
     },
 
     /**
@@ -123,7 +146,11 @@ export function createSubscriptionService(provider: PaymentProvider) {
       const subs = await prisma.subscription.findMany({
         where: { memberId },
         orderBy: { startedAt: 'desc' },
-        include: { plan: { select: { name: true } } },
+        include: {
+          plan: { select: { name: true } },
+          // 只取成功扣款的訂單（PAID），最新在前，用來算續扣次數與最後扣款時間
+          orders: { where: { status: 'PAID' }, select: { createdAt: true }, orderBy: { createdAt: 'desc' } },
+        },
       })
       return subs.map(s => ({
         id: s.id,
@@ -133,6 +160,8 @@ export function createSubscriptionService(provider: PaymentProvider) {
         planName: s.plan.name,
         startedAt: s.startedAt.toISOString(),
         nextBillingDate: s.nextBillingDate.toISOString(),
+        billedCount: s.orders.length,
+        lastBilledAt: s.orders[0]?.createdAt.toISOString() ?? null,
       }))
     },
 
@@ -146,6 +175,8 @@ export function createSubscriptionService(provider: PaymentProvider) {
         include: {
           member: { select: { email: true } },
           plan: { select: { name: true, amount: true, currency: true } },
+          // 只取成功扣款的訂單（PAID），最新在前，用來算續扣次數與最後扣款時間
+          orders: { where: { status: 'PAID' }, select: { createdAt: true }, orderBy: { createdAt: 'desc' } },
         },
       })
       return subs.map(s => ({
@@ -159,6 +190,8 @@ export function createSubscriptionService(provider: PaymentProvider) {
         cancelAtPeriodEnd: s.cancelAtPeriodEnd,
         startedAt: s.startedAt.toISOString(),
         nextBillingDate: s.nextBillingDate.toISOString(),
+        billedCount: s.orders.length,
+        lastBilledAt: s.orders[0]?.createdAt.toISOString() ?? null,
       }))
     },
 

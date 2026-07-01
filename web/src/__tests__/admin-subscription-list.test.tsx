@@ -26,6 +26,8 @@ const SUBS = [
     cancelAtPeriodEnd: false,
     startedAt: '2026-06-01T00:00:00.000Z',
     nextBillingDate: '2026-07-01T00:00:00.000Z',
+    billedCount: 2,
+    lastBilledAt: '2026-06-01T00:00:00.000Z',
   },
   // 不可取消：已 cancelAtPeriodEnd
   {
@@ -39,6 +41,8 @@ const SUBS = [
     cancelAtPeriodEnd: true,
     startedAt: '2026-05-01T00:00:00.000Z',
     nextBillingDate: '2026-06-01T00:00:00.000Z',
+    billedCount: 1,
+    lastBilledAt: '2026-05-01T00:00:00.000Z',
   },
   // 不可取消：已 CANCELED
   {
@@ -52,6 +56,8 @@ const SUBS = [
     cancelAtPeriodEnd: false,
     startedAt: '2026-04-01T00:00:00.000Z',
     nextBillingDate: '2026-05-01T00:00:00.000Z',
+    billedCount: 0,
+    lastBilledAt: null,
   },
 ]
 

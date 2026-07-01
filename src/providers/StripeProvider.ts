@@ -35,13 +35,23 @@ export interface StripeClient {
  */
 export class StripeProvider implements PaymentProvider {
   readonly name = 'stripe'
-  private readonly stripe: StripeClient
+  private readonly _injected?: StripeClient
+  private _lazy?: StripeClient
 
-  /** stripeClient 由外部注入；未提供時用 STRIPE_SECRET_KEY 建立真實 client。 */
+  /**
+   * stripeClient 由外部注入（測試 stub）；未提供時 lazy 建真實 client，
+   * 缺金鑰時不在 boot 擲錯，只在 charge() 真正被呼叫時才失敗（ADR-0013）。
+   */
   constructor(stripeClient?: StripeClient) {
-    this.stripe =
-      stripeClient ??
-      (new Stripe(process.env.STRIPE_SECRET_KEY!) as unknown as StripeClient)
+    this._injected = stripeClient
+  }
+
+  private get stripe(): StripeClient {
+    if (this._injected) return this._injected
+    if (!this._lazy) {
+      this._lazy = new Stripe(process.env.STRIPE_SECRET_KEY!) as unknown as StripeClient
+    }
+    return this._lazy
   }
 
   async charge(input: ChargeInput): Promise<ChargeResult> {

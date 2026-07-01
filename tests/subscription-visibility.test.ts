@@ -42,14 +42,14 @@ describe('18-visibility 1. GET /subscriptions 本人隔離', () => {
       .post('/subscriptions')
       .set('Authorization', `Bearer ${makeToken(memberA.id)}`)
       .send({ planId: plan.id })
-    const aSubId = aRes.body.id
+    const aSubId = aRes.body.subscription.id
 
     // B 訂閱
     const bRes = await request(app)
       .post('/subscriptions')
       .set('Authorization', `Bearer ${makeToken(memberB.id)}`)
       .send({ planId: plan.id })
-    const bSubId = bRes.body.id
+    const bSubId = bRes.body.subscription.id
 
     const res = await request(app)
       .get('/subscriptions')
@@ -73,16 +73,22 @@ describe('18-visibility 2. GET /subscriptions 排序 + planName', () => {
     const plan = await seedPlan()
     const token = makeToken(member.id)
 
-    // 建兩筆訂閱（時間不同）
-    await request(app)
-      .post('/subscriptions')
-      .set('Authorization', `Bearer ${token}`)
-      .send({ planId: plan.id })
-    await new Promise(r => setTimeout(r, 10))
-    await request(app)
-      .post('/subscriptions')
-      .set('Authorization', `Bearer ${token}`)
-      .send({ planId: plan.id })
+    // 建兩筆訂閱（startedAt 不同）。直接寫 DB 跳過「未結束不可再訂」守衛——
+    // 本案測的是清單排序與 planName，歷史本就可能有舊 CANCELED + 新訂閱並存。
+    await prisma.subscription.create({
+      data: {
+        memberId: member.id, planId: plan.id, status: 'CANCELED',
+        retryCount: 0, cancelAtPeriodEnd: true,
+        nextBillingDate: new Date(ts), startedAt: new Date(ts),
+      },
+    })
+    await prisma.subscription.create({
+      data: {
+        memberId: member.id, planId: plan.id, status: 'INCOMPLETE',
+        retryCount: 0, cancelAtPeriodEnd: false,
+        nextBillingDate: new Date(ts + 1000), startedAt: new Date(ts + 1000),
+      },
+    })
 
     const res = await request(app)
       .get('/subscriptions')
@@ -176,7 +182,7 @@ describe('18-visibility 6. Admin 期末取消他人訂閱', () => {
       .post('/subscriptions')
       .set('Authorization', `Bearer ${makeToken(member.id)}`)
       .send({ planId: plan.id })
-    const subId = subRes.body.id
+    const subId = subRes.body.subscription.id
 
     // admin 取消他人訂閱
     const cancelRes = await request(app)
@@ -194,5 +200,64 @@ describe('18-visibility 6. Admin 期末取消他人訂閱', () => {
 
     expect(cancelRes2.status).toBe(200)
     expect(cancelRes2.body.cancelAtPeriodEnd).toBe(true)
+  })
+})
+
+// ── 7. 續扣可觀測性：billedCount / lastBilledAt ────────────────────────────────
+
+describe('18-visibility 7. billedCount 反映成功扣款次數', () => {
+  // 直接寫 DB 種一筆 ACTIVE 訂閱 + N 張 PAID 訂單，模擬續扣歷史
+  async function seedSubWithPaidOrders(memberId: string, planId: string, paidCount: number) {
+    const sub = await prisma.subscription.create({
+      data: {
+        memberId, planId, status: 'ACTIVE',
+        retryCount: 0, cancelAtPeriodEnd: false,
+        nextBillingDate: new Date(Date.now() + 30 * 864e5), startedAt: new Date(),
+      },
+    })
+    for (let i = 0; i < paidCount; i++) {
+      await prisma.order.create({
+        data: {
+          memberId, subscriptionId: sub.id, amount: 1000, currency: 'TWD',
+          status: 'PAID', idempotencyKey: `${sub.id}:paid${i}`,
+          createdAt: new Date(Date.now() + i * 1000),
+        },
+      })
+    }
+    return sub
+  }
+
+  it('GET /subscriptions 帶 billedCount（PAID 訂單數）與 lastBilledAt（最新 PAID 時間）', async () => {
+    const ts = Date.now()
+    const member = await seedMember(`vis7-${ts}@example.com`)
+    const plan = await seedPlan()
+    await seedSubWithPaidOrders(member.id, plan.id, 3)
+
+    const res = await request(app)
+      .get('/subscriptions')
+      .set('Authorization', `Bearer ${makeToken(member.id)}`)
+
+    expect(res.status).toBe(200)
+    expect(res.body[0].billedCount).toBe(3)
+    expect(res.body[0].lastBilledAt).toBeTruthy()
+  })
+
+  it('未成功扣款（僅 PENDING 首單）→ billedCount=0、lastBilledAt=null', async () => {
+    const ts = Date.now()
+    const member = await seedMember(`vis7b-${ts}@example.com`)
+    const plan = await seedPlan()
+    // 走 API 建訂閱：Mock charge 回 PENDING，首單 PENDING，尚無 PAID
+    await request(app)
+      .post('/subscriptions')
+      .set('Authorization', `Bearer ${makeToken(member.id)}`)
+      .send({ planId: plan.id })
+
+    const res = await request(app)
+      .get('/subscriptions')
+      .set('Authorization', `Bearer ${makeToken(member.id)}`)
+
+    expect(res.status).toBe(200)
+    expect(res.body[0].billedCount).toBe(0)
+    expect(res.body[0].lastBilledAt).toBeNull()
   })
 })

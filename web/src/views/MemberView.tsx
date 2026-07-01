@@ -50,7 +50,11 @@ export function MemberView() {
         SUBSCRIPTION <span className="accent">PLANS</span>
       </h1>
 
-      <PlanGrid onSubscribed={handleSubscribed} currentSubscription={current} />
+      <PlanGrid
+        onSubscribed={handleSubscribed}
+        currentSubscription={current}
+        subscriptionHistory={subscriptions}
+      />
 
       {current && (
         <div style={{ marginTop: '2rem' }}>

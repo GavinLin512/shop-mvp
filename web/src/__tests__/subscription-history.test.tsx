@@ -22,6 +22,8 @@ const ACTIVE_SUB = {
   planName: 'Pro',
   startedAt: '2026-01-01T00:00:00.000Z',
   nextBillingDate: '2026-02-01T00:00:00.000Z',
+  billedCount: 3,
+  lastBilledAt: '2026-03-01T00:00:00.000Z',
 }
 
 const CANCELED_SUB = {
@@ -32,6 +34,8 @@ const CANCELED_SUB = {
   planName: 'Basic',
   startedAt: '2025-12-01T00:00:00.000Z',
   nextBillingDate: '2026-01-01T00:00:00.000Z',
+  billedCount: 1,
+  lastBilledAt: '2025-12-01T00:00:00.000Z',
 }
 
 // 另外 mock PlanGrid 避免 fetch /plans 干擾
@@ -61,6 +65,10 @@ describe('前台 SubscriptionHistory — 測試 7', () => {
     // status badges（ACTIVE 在 Panel+History 各一次，CANCELED 在 History）
     expect(screen.getAllByText('ACTIVE').length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText('CANCELED')).toBeInTheDocument()
+
+    // 續扣次數欄：ACTIVE 續扣 3 次、CANCELED 1 次
+    expect(screen.getByText('3×')).toBeInTheDocument()
+    expect(screen.getByText('1×')).toBeInTheDocument()
   })
 
   it('空清單顯示 placeholder', async () => {

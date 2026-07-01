@@ -5,6 +5,7 @@ import { createApp } from '../src/app'
 import prisma from '../src/lib/prisma'
 import { runReconciliation, type GatewayQuery } from '../src/jobs/reconciliationCron'
 import type { PaymentProvider } from '../src/providers/PaymentProvider'
+import { createCompatRegistry } from '../src/providers/ProviderRegistry'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -86,7 +87,7 @@ describe('13-reconciliation 1. 逾時 PENDING + gateway SUCCESS → PAID/ACTIVE'
     const queryGateway: GatewayQuery = vi.fn().mockResolvedValue('SUCCESS')
     const provider = makeFakeProvider()
 
-    const result = await runReconciliation(now, provider, queryGateway, 5)
+    const result = await runReconciliation(now, createCompatRegistry(provider), queryGateway, 5)
 
     expect(result.checked).toBe(1)
     expect(result.updated).toBe(1)
@@ -115,7 +116,7 @@ describe('13-reconciliation 2. gateway 仍 PENDING → 不動', () => {
     const queryGateway: GatewayQuery = vi.fn().mockResolvedValue('PENDING')
     const provider = makeFakeProvider()
 
-    const result = await runReconciliation(now, provider, queryGateway, 5)
+    const result = await runReconciliation(now, createCompatRegistry(provider), queryGateway, 5)
 
     expect(result.checked).toBe(1)
     expect(result.updated).toBe(0)
@@ -144,7 +145,7 @@ describe('13-reconciliation 3. gateway FAILED → 補成 FAILED', () => {
     const queryGateway: GatewayQuery = vi.fn().mockResolvedValue('FAILED')
     const provider = makeFakeProvider()
 
-    const result = await runReconciliation(now, provider, queryGateway, 5)
+    const result = await runReconciliation(now, createCompatRegistry(provider), queryGateway, 5)
 
     expect(result.checked).toBe(1)
     expect(result.updated).toBe(1)
@@ -188,7 +189,7 @@ describe('13-reconciliation 4. 已終態不重撈', () => {
     const queryGateway: GatewayQuery = vi.fn().mockResolvedValue('SUCCESS')
     const provider = makeFakeProvider()
 
-    const result = await runReconciliation(now, provider, queryGateway, 5)
+    const result = await runReconciliation(now, createCompatRegistry(provider), queryGateway, 5)
 
     expect(result.checked).toBe(0)
     expect(result.updated).toBe(0)
@@ -210,7 +211,7 @@ describe('13-reconciliation 5. 與 webhook 不重複處理', () => {
     const provider = makeFakeProvider()
 
     // 對帳先跑，補正為 SUCCESS
-    await runReconciliation(now, provider, queryGateway, 5)
+    await runReconciliation(now, createCompatRegistry(provider), queryGateway, 5)
 
     const afterRecon = await prisma.payment.findFirst({ where: { providerTxnId: txnId } })
     expect(afterRecon?.status).toBe('SUCCESS')

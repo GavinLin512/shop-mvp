@@ -1,4 +1,4 @@
-import type { Config, MemberSubscription, AdminSubscription } from '../types'
+import type { Config, MemberSubscription, AdminSubscription, CreateSubscriptionResult } from '../types'
 
 // Bearer token 由 AuthContext 在 login/logout 時同步更新
 let _token: string | null = typeof window !== 'undefined'
@@ -88,4 +88,23 @@ export function demoSetForceFail(enabled: boolean): Promise<{ ok: boolean; force
 
 export function demoReplayWebhook(): Promise<{ ok: boolean; duplicate: boolean }> {
   return apiFetch('/demo/mock/replay-webhook', { method: 'POST' })
+}
+
+// --- Provider 切換 API（ADR-0013）---
+
+export function demoGetProvider(): Promise<{ current: string; stripeConfigured: boolean }> {
+  return apiFetch('/demo/provider')
+}
+
+export function demoSetProvider(provider: 'mock' | 'stripe'): Promise<{ ok: boolean; current: string }> {
+  return apiFetch('/demo/provider', { method: 'POST', body: JSON.stringify({ provider }) })
+}
+
+// --- 建立訂閱（回 { subscription, clientSecret? }）---
+
+export function createSubscription(planId: string): Promise<CreateSubscriptionResult> {
+  return apiFetch<CreateSubscriptionResult>('/subscriptions', {
+    method: 'POST',
+    body: JSON.stringify({ planId }),
+  })
 }

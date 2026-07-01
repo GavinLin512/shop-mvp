@@ -1,5 +1,5 @@
 import prisma from '../lib/prisma'
-import type { PaymentProvider } from '../providers/PaymentProvider'
+import type { ProviderRegistry, ProviderName } from '../providers/ProviderRegistry'
 import { applyPaymentOutcome } from '../services/webhookService'
 
 export type GatewayStatus = 'PENDING' | 'SUCCESS' | 'FAILED'
@@ -15,7 +15,7 @@ export type GatewayQuery = (txnId: string) => Promise<GatewayStatus | null>
  * 走 applyPaymentOutcome 共用冪等邏輯，與遲到的 webhook 不會重複更新（DECISION.md #3）。
  *
  * @param now           當前時間（可注入，方便測試）
- * @param provider      PaymentProvider（供 dunning 重試呼叫 charge）
+ * @param registry      ProviderRegistry（供 dunning 重試依 Payment.provider 取對應實作）
  * @param queryGateway  查詢 gateway 函式（可注入，測試可替換 stub）
  * @param thresholdMinutes 超過幾分鐘的 PENDING 才處理（預設 5）
  * @returns checked     本次掃到的 PENDING 筆數
@@ -23,7 +23,7 @@ export type GatewayQuery = (txnId: string) => Promise<GatewayStatus | null>
  */
 export async function runReconciliation(
   now: Date,
-  provider: PaymentProvider,
+  registry: ProviderRegistry,
   queryGateway: GatewayQuery,
   thresholdMinutes = 5,
 ): Promise<{ checked: number; updated: number }> {
@@ -36,7 +36,7 @@ export async function runReconciliation(
       providerTxnId: { not: null },
       createdAt: { lte: threshold },
     },
-    select: { providerTxnId: true, orderId: true },
+    select: { providerTxnId: true, orderId: true, provider: true },
   })
 
   let checked = 0
@@ -50,7 +50,9 @@ export async function runReconciliation(
       // gateway 查詢失敗或仍 PENDING → 略過，等下一輪
       if (!gatewayStatus || gatewayStatus === 'PENDING') continue
 
-      await applyPaymentOutcome(payment.providerTxnId!, payment.orderId, gatewayStatus, provider)
+      // 依 Payment.provider 取對應實作，確保 dunning 重試走同一 provider（ADR-0013）
+      const paymentProvider = registry.get(payment.provider as ProviderName)
+      await applyPaymentOutcome(payment.providerTxnId!, payment.orderId, gatewayStatus, paymentProvider)
       updated++
     } catch (err) {
       // 逐筆隔離：單筆失敗不影響其餘（同 billingCron 設計）

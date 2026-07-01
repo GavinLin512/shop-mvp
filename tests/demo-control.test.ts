@@ -125,14 +125,17 @@ afterEach(() => {
 // ── 1. GET /config ─────────────────────────────────────────────────────────────
 
 describe('19-demo-control 1. GET /config', () => {
-  it('公開端點，回傳 demoMode + provider，不含密鑰欄位', async () => {
+  it('公開端點，回傳 demoMode + provider + stripeConfigured，不含密鑰欄位', async () => {
     process.env.DEMO_MODE = 'true'
     const app = createApp()
     const res = await request(app).get('/config')
     expect(res.status).toBe(200)
     expect(typeof res.body.demoMode).toBe('boolean')
     expect(['mock', 'stripe']).toContain(res.body.provider)
-    expect(Object.keys(res.body).sort()).toEqual(['demoMode', 'provider'])
+    expect(typeof res.body.stripeConfigured).toBe('boolean')
+    // publishableKey 只在 stripeConfigured 時出現（test 環境無 Stripe 金鑰故不存在）
+    expect(res.body).not.toHaveProperty('STRIPE_SECRET_KEY')
+    expect(res.body).not.toHaveProperty('STRIPE_WEBHOOK_SECRET')
   })
 
   it('DEMO_MODE=false → demoMode=false', async () => {

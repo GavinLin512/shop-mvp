@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { apiFetch } from '../../api/client'
 import { formatCurrency } from '../../lib/money'
 import type { Plan } from '../../types'
@@ -15,6 +15,13 @@ export function CreatePlanForm({ onCreated }: Props) {
   const [created, setCreated] = useState<Plan | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+
+  // success card 顯示 5 秒後自動消失；重新建立或卸載時清掉舊 timer 避免殘留
+  useEffect(() => {
+    if (!created) return
+    const timer = setTimeout(() => setCreated(null), 5000)
+    return () => clearTimeout(timer)
+  }, [created])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

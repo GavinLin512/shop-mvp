@@ -73,6 +73,8 @@ model Subscription {
   startedAt               DateTime           @default(now())
   canceledAt              DateTime?
   providerPaymentMethodId String?
+  /** 建立時綁定的金流商名稱；cron 依此選對應 provider 扣款，切換不影響在途訂閱（ADR-0013）。 */
+  provider                String             @default("mock")
 
   member Member @relation(fields: [memberId], references: [id])
   plan   Plan   @relation(fields: [planId], references: [id])

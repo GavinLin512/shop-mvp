@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import prisma from '../src/lib/prisma'
 import { runBillingCycle } from '../src/jobs/billingCron'
 import type { PaymentProvider } from '../src/providers/PaymentProvider'
+import { createCompatRegistry } from '../src/providers/ProviderRegistry'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -52,20 +53,20 @@ describe('12-billing-cron 1. 到期 ACTIVE 訂閱被續扣', () => {
     const sub = await seedActiveSubscription(member.id, plan.id, billingDate)
 
     const provider = makeFakeProvider()
-    const result = await runBillingCycle(now, provider)
+    const result = await runBillingCycle(now, createCompatRegistry(provider))
 
     expect(result.processed).toBe(1)
     expect(result.skipped).toBe(0)
 
-    // charge 被呼叫，冪等鍵帶正確週期日期
+    // charge 被呼叫，冪等鍵帶正確週期識別（nextBillingDate 完整時間戳）
     expect(provider.charge).toHaveBeenCalledTimes(1)
     const callArg = provider.charge.mock.calls[0][0]
-    expect(callArg.idempotencyKey).toBe(`${sub.id}:2026-06-28`)
+    expect(callArg.idempotencyKey).toBe(`${sub.id}:2026-06-28T00:00:00.000Z`)
 
     // DB 有週期 Order
     const order = await prisma.order.findFirst({ where: { subscriptionId: sub.id } })
     expect(order).not.toBeNull()
-    expect(order?.idempotencyKey).toBe(`${sub.id}:2026-06-28`)
+    expect(order?.idempotencyKey).toBe(`${sub.id}:2026-06-28T00:00:00.000Z`)
     expect(order?.status).toBe('PENDING')
     expect(order?.amount).toBe(plan.amount)
 
@@ -88,7 +89,7 @@ describe('12-billing-cron 2. 未到期不處理', () => {
     await seedActiveSubscription(member.id, plan.id, billingDate)
 
     const provider = makeFakeProvider()
-    const result = await runBillingCycle(now, provider)
+    const result = await runBillingCycle(now, createCompatRegistry(provider))
 
     expect(result.processed).toBe(0)
     expect(result.skipped).toBe(0)
@@ -113,11 +114,11 @@ describe('12-billing-cron 3. 同週期重跑冪等', () => {
     const provider = makeFakeProvider()
 
     // 第一次執行
-    const result1 = await runBillingCycle(now, provider)
+    const result1 = await runBillingCycle(now, createCompatRegistry(provider))
     expect(result1.processed).toBe(1)
 
     // 第二次以相同 now 執行：nextBillingDate 已前進，訂閱不再符合 <= now
-    const result2 = await runBillingCycle(now, provider)
+    const result2 = await runBillingCycle(now, createCompatRegistry(provider))
     expect(result2.processed).toBe(0)
     expect(result2.skipped).toBe(0)
 
@@ -125,6 +126,42 @@ describe('12-billing-cron 3. 同週期重跑冪等', () => {
     const orders = await prisma.order.findMany()
     expect(orders).toHaveLength(1)
     expect(provider.charge).toHaveBeenCalledTimes(1)
+  })
+})
+
+// ── 3b. 同一天多次 make-due → 每次都續扣（不因日期粒度撞號 skip）──────────────
+
+describe('12-billing-cron 3b. 同一天多次續扣（demo MAKE DUE 反覆撥）', () => {
+  it('同日兩次「撥到當下 + run-billing」→ 建兩張不同 Order，皆不 skip', async () => {
+    const member = await seedMember(`bc3b-${Date.now()}@example.com`)
+    const plan = await seedPlan(30)
+    // 同一天內兩個不同時刻，模擬使用者兩次點 MAKE DUE（各撥成不同的 now）
+    const due1 = new Date('2026-06-28T08:00:00.000Z')
+    const due2 = new Date('2026-06-28T08:05:00.000Z')
+    const sub = await seedActiveSubscription(member.id, plan.id, due1)
+
+    const provider = makeFakeProvider()
+
+    // 第一次續扣（now 在 due1 之後）
+    const r1 = await runBillingCycle(new Date('2026-06-28T08:00:01.000Z'), createCompatRegistry(provider))
+    expect(r1.processed).toBe(1)
+    expect(r1.skipped).toBe(0)
+
+    // 模擬第二次 MAKE DUE：把 nextBillingDate 再撥回同一天稍晚的時刻
+    await prisma.subscription.update({ where: { id: sub.id }, data: { nextBillingDate: due2 } })
+
+    // 第二次續扣：日期相同但時間戳不同 → 鍵唯一 → 不 skip，建第二張 Order
+    const r2 = await runBillingCycle(new Date('2026-06-28T08:05:01.000Z'), createCompatRegistry(provider))
+    expect(r2.processed).toBe(1)
+    expect(r2.skipped).toBe(0)
+
+    const orders = await prisma.order.findMany({ where: { subscriptionId: sub.id } })
+    expect(orders).toHaveLength(2)
+    // 兩張鍵不同（同日、不同時間戳）
+    const keys = orders.map(o => o.idempotencyKey)
+    expect(new Set(keys).size).toBe(2)
+    expect(keys).toContain(`${sub.id}:2026-06-28T08:00:00.000Z`)
+    expect(keys).toContain(`${sub.id}:2026-06-28T08:05:00.000Z`)
   })
 })
 
@@ -142,7 +179,7 @@ describe('12-billing-cron 4. 期末取消到期 → CANCELED 不建單', () => {
     })
 
     const provider = makeFakeProvider()
-    const result = await runBillingCycle(now, provider)
+    const result = await runBillingCycle(now, createCompatRegistry(provider))
 
     expect(result.processed).toBe(1)
     expect(provider.charge).not.toHaveBeenCalled()
@@ -181,7 +218,7 @@ describe('12-billing-cron 5. 逐筆隔離（中斷可續）', () => {
     })
 
     const provider: PaymentProvider = { charge: chargeImpl }
-    const result = await runBillingCycle(now, provider)
+    const result = await runBillingCycle(now, createCompatRegistry(provider))
 
     // 兩筆都嘗試了，一個 processed 一個 skipped
     expect(result.processed + result.skipped).toBe(2)

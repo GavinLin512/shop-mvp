@@ -31,6 +31,8 @@ const MEMBER_ACTIVE = {
   planName: 'Pro',
   startedAt: '2026-06-01T00:00:00.000Z',
   nextBillingDate: '2026-07-01T00:00:00.000Z',
+  billedCount: 1,
+  lastBilledAt: '2026-06-01T00:00:00.000Z',
 }
 const MEMBER_CANCELED = { ...MEMBER_ACTIVE, status: 'CANCELED' as const }
 
@@ -45,6 +47,8 @@ const ADMIN_ACTIVE = {
   cancelAtPeriodEnd: false,
   startedAt: '2026-06-01T00:00:00.000Z',
   nextBillingDate: '2026-07-01T00:00:00.000Z',
+  billedCount: 1,
+  lastBilledAt: '2026-06-01T00:00:00.000Z',
 }
 const ADMIN_CANCELED = { ...ADMIN_ACTIVE, status: 'CANCELED' as const }
 

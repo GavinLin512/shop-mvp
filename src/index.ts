@@ -6,37 +6,35 @@ import { runBillingCycle } from './jobs/billingCron'
 import { runReconciliation } from './jobs/reconciliationCron'
 import { MockProvider } from './providers/MockProvider'
 import { StripeProvider } from './providers/StripeProvider'
-import type { PaymentProvider } from './providers/PaymentProvider'
+import { createProviderRegistry } from './providers/ProviderRegistry'
 import type { GatewayStatus } from './jobs/reconciliationCron'
+import type { StripeWebhooks } from './routes/stripeWebhooks'
 
 const port = Number(process.env.PORT) || 3000
 const gatewayBaseUrl = process.env.MOCK_GATEWAY_URL ?? `http://localhost:${port}`
 
-// 組裝點：PAYMENT_PROVIDER=stripe 時用 Stripe，否則用 Mock（DECISION.md #8, ADR-0011）
-const paymentProviderName = process.env.PAYMENT_PROVIDER ?? 'mock'
+// 兩個 provider 常駐，boot 時不依 PAYMENT_PROVIDER 選其一（ADR-0013）。
+// StripeProvider lazy 建真實 client，缺金鑰不 crash（boot safe）。
+const registry = createProviderRegistry({
+  mockProvider: new MockProvider(gatewayBaseUrl),
+  stripeProvider: new StripeProvider(),
+})
 
-let provider: PaymentProvider
-let stripeInstance: Stripe | undefined
-
-if (paymentProviderName === 'stripe') {
-  stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY!)
-  provider = new StripeProvider(stripeInstance as unknown as import('./providers/StripeProvider').StripeClient)
-} else {
-  provider = new MockProvider(gatewayBaseUrl)
-}
-
-import type { StripeWebhooks } from './routes/stripeWebhooks'
+// Stripe webhook：只要金鑰齊全即掛載，與當下 current 無關（ADR-0013）。
+const stripeWebhooksClient = registry.isConfigured('stripe')
+  ? new Stripe(process.env.STRIPE_SECRET_KEY!).webhooks
+  : undefined
 
 createApp({
-  paymentProvider: provider,
-  stripeWebhooks: stripeInstance?.webhooks as unknown as StripeWebhooks | undefined,
+  registry,
+  stripeWebhooks: stripeWebhooksClient as unknown as StripeWebhooks | undefined,
 }).listen(port, () => {
-  console.log(`Server listening on port ${port} [provider=${paymentProviderName}]`)
+  console.log(`Server listening on port ${port} [provider=${registry.currentName()}]`)
 })
 
 // 每小時頂點掃 nextBillingDate <= now 的訂閱續扣（DECISION.md #7）
 cron.schedule('0 * * * *', async () => {
-  const { processed, skipped } = await runBillingCycle(new Date(), provider)
+  const { processed, skipped } = await runBillingCycle(new Date(), registry)
   console.log(`[billing-cron] processed=${processed} skipped=${skipped}`)
 }, { noOverlap: true, name: 'billing-cron', timezone: 'UTC' })
 
@@ -53,6 +51,6 @@ cron.schedule('*/5 * * * *', async () => {
     }
   }
 
-  const { checked, updated } = await runReconciliation(new Date(), provider, queryGateway)
+  const { checked, updated } = await runReconciliation(new Date(), registry, queryGateway)
   console.log(`[reconciliation-cron] checked=${checked} updated=${updated}`)
 }, { noOverlap: true, name: 'reconciliation-cron', timezone: 'UTC' })

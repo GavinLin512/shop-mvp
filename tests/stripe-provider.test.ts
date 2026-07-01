@@ -7,6 +7,7 @@ import type { StripeClient } from '../src/providers/StripeProvider'
 import type { StripeWebhooks } from '../src/routes/stripeWebhooks'
 import type { PaymentProvider } from '../src/providers/PaymentProvider'
 import { runBillingCycle } from '../src/jobs/billingCron'
+import { createCompatRegistry } from '../src/providers/ProviderRegistry'
 import prisma from '../src/lib/prisma'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -456,7 +457,7 @@ describe('15-stripe 9. 續扣 FAILED → 走 dunning（同步路徑）', () => {
       return Promise.resolve({ id: `pi_retry${callCount}`, client_secret: null, status: 'succeeded' })
     })
 
-    await runBillingCycle(now, stripeProvider)
+    await runBillingCycle(now, createCompatRegistry(stripeProvider))
 
     const updatedSub = await prisma.subscription.findUnique({ where: { id: sub.id } })
     expect(updatedSub?.status).toBe('PAST_DUE')

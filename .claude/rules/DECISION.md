@@ -16,8 +16,8 @@
 ## 冪等鍵設計
 
 - `idempotencyKey` 由伺服器端決定且具決定性,非隨機。
-- 續扣 key = `subscriptionId + 計費週期識別`,如 `sub_123:2026-07-01`。
-- 重試 key 加重試序,如 `sub_123:2026-07-01:retry1`,失敗不重用 Order,建新單。
+- 續扣 key = `subscriptionId + 計費週期識別`,週期識別用 `nextBillingDate` 的**完整 ISO 時間戳**(如 `sub_123:2026-07-01T00:00:00.000Z`)。同一週期(同一 `nextBillingDate`)必得同一鍵 → 重跑 dedupe;不同週期時間戳必不同 → 各自建單。生產每週期相隔 ≥ 1 interval,行為與日期粒度一致;用時間戳是為讓 Demo Control MAKE DUE 同一天反覆續扣時鍵不撞號(見 `billingCron.ts` 註解)。
+- 重試 key 加重試序,如 `sub_123:<cycle>:retry1`,失敗不重用 Order,建新單。
 - 首筆訂閱單同規則,如 `sub_123:cycle0`。
 - `Order.idempotencyKey` 加 DB UNIQUE,由資料庫保證唯一,而非應用層先查再寫。
 

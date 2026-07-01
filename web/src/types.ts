@@ -1,6 +1,14 @@
 export interface Config {
   demoMode: boolean
   provider: 'mock' | 'stripe'
+  stripeConfigured: boolean
+  publishableKey?: string
+}
+
+/** POST /subscriptions 回應（ADR-0013）：Stripe 首扣有 clientSecret，Mock 無 */
+export interface CreateSubscriptionResult {
+  subscription: Subscription
+  clientSecret?: string
 }
 
 export interface Plan {
@@ -30,6 +38,9 @@ export interface MemberSubscription {
   planName: string
   startedAt: string
   nextBillingDate?: string
+  // 續扣可觀測性：已成功扣款次數與最後扣款時間
+  billedCount: number
+  lastBilledAt: string | null
 }
 
 // GET /admin/subscriptions — 後台全部訂閱，含 memberEmail / amount
@@ -44,4 +55,7 @@ export interface AdminSubscription {
   cancelAtPeriodEnd: boolean
   startedAt: string
   nextBillingDate?: string
+  // 續扣可觀測性：已成功扣款次數與最後扣款時間
+  billedCount: number
+  lastBilledAt: string | null
 }

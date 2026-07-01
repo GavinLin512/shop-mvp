@@ -1,11 +1,19 @@
 import prisma from '../lib/prisma'
 import { buildOrderKey } from '../lib/idempotency'
 import { applyPaymentOutcome } from '../services/webhookService'
-import type { PaymentProvider } from '../providers/PaymentProvider'
+import type { ProviderRegistry, ProviderName } from '../providers/ProviderRegistry'
 
-/** 將 Date 轉為 YYYY-MM-DD 格式，作為冪等鍵的週期識別。 */
+/**
+ * 將 nextBillingDate 轉為冪等鍵的週期識別（完整 ISO 時間戳）。
+ *
+ * 用完整時間戳而非僅日期（YYYY-MM-DD）的原因：
+ * - 生產：每個週期相隔至少一個 interval（≥ 1 天），時間戳必然不同 → 行為與日期粒度完全一致。
+ * - 冪等保證不變：同一 nextBillingDate 產生同一鍵，重跑仍 dedupe（見測試 3）。
+ * - Demo：Demo Control 的 MAKE DUE 會把 nextBillingDate 反覆撥成「當下」，
+ *   同一天多次續扣若用日期粒度會撞同鍵 → P2002 skip；改用時間戳後每次 now 不同 → 鍵唯一，續扣可重複。
+ */
 function formatCycleDate(date: Date): string {
-  return date.toISOString().slice(0, 10)
+  return date.toISOString()
 }
 
 function isPrismaUniqueError(err: unknown): boolean {
@@ -20,13 +28,14 @@ function isPrismaUniqueError(err: unknown): boolean {
 /**
  * 掃 nextBillingDate <= now 的 ACTIVE 訂閱，逐筆建週期單並觸發扣款。
  * 純函式，不依賴 cron timer，便於測試與中斷重試（DECISION.md #7）。
+ * 每筆依 Subscription.provider 向 registry 取對應實作（ADR-0013）。
  *
  * @returns processed  成功建單或轉 CANCELED 的筆數
  * @returns skipped    冪等重複或失敗跳過的筆數
  */
 export async function runBillingCycle(
   now: Date,
-  provider: PaymentProvider,
+  registry: ProviderRegistry,
 ): Promise<{ processed: number; skipped: number }> {
   const subscriptions = await prisma.subscription.findMany({
     where: {
@@ -77,7 +86,9 @@ export async function runBillingCycle(
         return order
       })
 
-      const result = await provider.charge({
+      // 依訂閱建立時綁定的 provider 扣款，與當下 registry 選誰無關（ADR-0013）
+      const subProvider = registry.get(sub.provider as ProviderName)
+      const result = await subProvider.charge({
         orderId: order.id,
         amount: order.amount,
         currency: order.currency,
@@ -86,7 +97,7 @@ export async function runBillingCycle(
 
       // off-session 同步出結果（Stripe）→ 立即補正；PENDING（Mock）→ 等 webhook 非同步補
       if (result.status !== 'PENDING') {
-        await applyPaymentOutcome(result.providerTxnId, order.id, result.status, provider)
+        await applyPaymentOutcome(result.providerTxnId, order.id, result.status, subProvider)
       }
 
       processed++

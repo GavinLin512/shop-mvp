@@ -7,41 +7,42 @@
 ## 任務 Checklist
 
 ### ProviderRegistry(後端)
-- [ ] 1. `current()` 初值依 `PAYMENT_PROVIDER`(未設 → mock)
-- [ ] 2. `setCurrent('stripe')` 後 `currentName()==='stripe'`、`current()` 為 StripeProvider
-- [ ] 3. `get('mock')` / `get('stripe')` 各回對應實作(與 `current` 無關)
-- [ ] 4. 缺 Stripe 金鑰時 `isConfigured('stripe')===false`,且 **boot 不擲錯**(lazy)
+- [x] 1. `current()` 初值依 `PAYMENT_PROVIDER`(未設 → mock)
+- [x] 2. `setCurrent('stripe')` 後 `currentName()==='stripe'`、`current()` 為 StripeProvider
+- [x] 3. `get('mock')` / `get('stripe')` 各回對應實作(與 `current` 無關)
+- [x] 4. 缺 Stripe 金鑰時 `isConfigured('stripe')===false`,且 **boot 不擲錯**(lazy)
 
 ### 切換端點(後端,DEMO_MODE)
-- [ ] 5. `DEMO_MODE` 關 → `GET/POST /demo/provider` 回 **404**
-- [ ] 6. `DEMO_MODE` 開但非 ADMIN → 403;未登入 → 401
-- [ ] 7. `GET /demo/provider` 回 `{ current, stripeConfigured }` 反映當下
-- [ ] 8. `POST /demo/provider { stripe }` 在 **未 configured** → 409,`current` 不變
-- [ ] 9. `POST /demo/provider { stripe }` 在 configured → 200,後續 `GET /config.provider==='stripe'`
-- [ ] 10. `POST /demo/provider { mock }` 切回後 `current==='mock'`
+- [x] 5. `DEMO_MODE` 關 → `GET/POST /demo/provider` 回 **404**
+- [x] 6. `DEMO_MODE` 開但非 ADMIN → 403;未登入 → 401
+- [x] 7. `GET /demo/provider` 回 `{ current, stripeConfigured }` 反映當下
+- [x] 8. `POST /demo/provider { stripe }` 在 **未 configured** → 409,`current` 不變
+- [x] 9. `POST /demo/provider { stripe }` 在 configured → 200,後續 `GET /config.provider==='stripe'`
+- [x] 10. `POST /demo/provider { mock }` 切回後 `current==='mock'`
 
 ### provider 綁訂閱 + cron(後端)
-- [ ] 11. `current='stripe'` 時建訂閱 → `Subscription.provider==='stripe'`
-- [ ] 12. 建後切回 `mock`,run-billing 對該訂閱仍用 **stripe** 實作扣(依 `sub.provider`,非當下 current)
-- [ ] 13. `current='mock'` 建的訂閱續扣走 mock,互不干擾
+- [x] 11. `current='stripe'` 時建訂閱 → `Subscription.provider==='stripe'`
+- [x] 12. 建後切回 `mock`,run-billing 對該訂閱仍用 **stripe** 實作扣(依 `sub.provider`,非當下 current)
+- [x] 13. `current='mock'` 建的訂閱續扣走 mock,互不干擾
 
 ### create 回應 + /config(後端)
-- [ ] 14. Mock 建訂閱回 `{ subscription }`(**無** clientSecret)
-- [ ] 15. Stripe 首扣建訂閱回 `{ subscription, clientSecret }`(stub 回 PI client_secret)
-- [ ] 16. `GET /config` configured 時帶 `stripeConfigured:true` 與 `publishableKey`;未 configured 不帶 key
+- [x] 14. Mock 建訂閱回 `{ subscription }`(**無** clientSecret)
+- [x] 15. Stripe 首扣建訂閱回 `{ subscription, clientSecret }`(stub 回 PI client_secret)
+- [x] 16. `GET /config` configured 時帶 `stripeConfigured:true` 與 `publishableKey`;未 configured 不帶 key
 
 ### Stripe webhook 掛載(後端)
-- [ ] 17. stripeConfigured 時 `/webhooks/stripe` 即使當下 current=mock 也存在(非 404)
+- [x] 17. stripeConfigured 時 `/webhooks/stripe` 即使當下 current=mock 也存在(非 404)
 
 ### mock 限定端點(後端)
-- [ ] 18. `current='stripe'` 時 `force-fail` / `replay-webhook` 回 409(改用 `registry.current().name`)
+- [x] 18. `current='stripe'` 時 `force-fail` / `replay-webhook` 回 409(改用 `registry.current().name`)
 
 ### 前端
-- [ ] 19. 建訂閱回應含 `clientSecret` → 渲染 `<PaymentElement>` 收卡區;confirm 後進輪詢
-- [ ] 20. 回應無 `clientSecret`(Mock)→ 不渲染收卡區,直接輪詢(現狀不破)
-- [ ] 21. `DemoControlPanel` 掛載讀 `GET /demo/provider` 還原當下選擇
-- [ ] 22. `stripeConfigured=false` → Stripe 切換選項 disable 並提示
-- [ ] 23. 切換成功後 refetch `/config`,UI 反映新 provider
+- [x] 19. 建訂閱回應含 `clientSecret` → 渲染 `<PaymentElement>` 收卡區;confirm 後進輪詢
+- [x] 20. 回應無 `clientSecret`(Mock)→ 不渲染收卡區,直接輪詢(現狀不破)
+- [x] 21. `DemoControlPanel` 掛載讀 `GET /demo/provider` 還原當下選擇
+- [x] 22. `stripeConfigured=false` → Stripe 切換選項 disable 並提示
+- [x] 23. 切換成功後 refetch `/config`,UI 反映新 provider
+- [x] 24. demo-autofill:`demoMode=true` 時收卡區出現 `USE TEST CARD (4242)` 按鈕,點擊以 `pm_card_visa` confirm 後進輪詢;`demoMode=false` 不渲染該按鈕
 
 ## 行為清單(RED → GREEN,逐一)
 
@@ -59,6 +60,12 @@
 - **Mock**:`POST /subscriptions` → `{ subscription }`,前端不掛 Elements,直接輪詢。
 - **Stripe**:stub 回 `{ status:'PENDING', clientSecret:'pi_..._secret' }` → `{ subscription, clientSecret }`,
   前端掛 `<PaymentElement>`,mock `stripe.confirmPayment` resolve 後進輪詢。
+
+### demo-autofill 一鍵測試卡(24)
+- **Given** `demoMode=true`、收卡區已渲染(有 `clientSecret` + `publishableKey`)。
+- **When** 點 `USE TEST CARD (4242)`。**Then** 呼叫 `stripe.confirmCardPayment(clientSecret, { payment_method:'pm_card_visa' })`,resolve 後 `onSuccess` 觸發輪詢。
+- **Given** `demoMode=false`。**Then** 不渲染 `USE TEST CARD` 按鈕(正式環境隔離);手動 `<PaymentElement>` + `CONFIRM PAYMENT` 不受影響。
+- PaymentElement 為跨來源 iframe,外部 JS 無法填值,故 demo 捷徑改用測試 PaymentMethod 直接 confirm(見 `StripePaymentForm.tsx`)。
 
 ### Stripe webhook 永遠掛載(17)
 - **Given** stripeConfigured 但 `current=mock`。**When** POST `/webhooks/stripe`(自簽 header)。**Then** 路由存在(非 404),走既有驗簽流程。

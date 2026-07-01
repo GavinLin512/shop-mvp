@@ -3,7 +3,7 @@
  *
  * 格式規則（見 DECISION.md #1）：
  *   首單  : sub_<id>:cycle0
- *   週期  : sub_<id>:<YYYY-MM-DD>
+ *   週期  : sub_<id>:<nextBillingDate ISO 時間戳>（決定性，同一週期同一鍵）
  *   重試  : sub_<id>:<cycle>:retry<N>
  *
  * cycle 參數直接決定後綴，呼叫端負責傳正確格式。

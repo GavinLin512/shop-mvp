@@ -72,7 +72,7 @@ export function AdminSubscriptionList() {
         <table className="admin-table" style={{ minWidth: 'max-content', width: '100%' }}>
           <thead>
             <tr>
-              {['Member', 'Plan', 'Amount', 'Status', 'Cancel at period end', 'Started at', 'Next billing', 'Action', ...(demoMode ? ['Demo'] : [])].map(h => (
+              {['Member', 'Plan', 'Amount', 'Status', 'Cancel at period end', 'Started at', 'Next billing', 'Billed', 'Action', ...(demoMode ? ['Demo'] : [])].map(h => (
                 <th key={h}>{h}</th>
               ))}
             </tr>
@@ -87,6 +87,10 @@ export function AdminSubscriptionList() {
                 <td>{s.cancelAtPeriodEnd ? 'Yes' : 'No'}</td>
                 <td>{formatDate(s.startedAt)}</td>
                 <td>{formatDate(s.nextBillingDate ?? '')}</td>
+                {/* 續扣次數：run-billing 續扣成功後 +1，讓「有沒有扣到」看得出來 */}
+                <td title={s.lastBilledAt ? `Last billed: ${formatDate(s.lastBilledAt)}` : 'Not billed yet'}>
+                  {s.billedCount}×
+                </td>
                 <td>
                   {canCancel(s) && (
                     <button
