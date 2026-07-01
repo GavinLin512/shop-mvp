@@ -391,7 +391,9 @@ body {
 /* ── Shared Table Base ───────────────────────────────────── */
 .admin-table,
 .history-table {
-  width: 100%;
+  /* max-content 讓 table 依欄位內容自行撐寬，min-width: 100% 在桌機仍填滿容器 */
+  width: max-content;
+  min-width: 100%;
   border-collapse: collapse;
   font-size: var(--small);
 }
@@ -405,6 +407,7 @@ body {
   color: var(--text-muted);
   border-bottom: 1px solid var(--border);
   padding: 0.4rem 0.6rem;
+  white-space: nowrap;
 }
 .admin-table td,
 .history-table td {
@@ -412,6 +415,7 @@ body {
   padding: 0.5rem 0.6rem;
   border-bottom: 1px solid var(--border);
   color: var(--text);
+  white-space: nowrap;
 }
 .admin-table tr:last-child td,
 .history-table tr:last-child td { border-bottom: none; }
