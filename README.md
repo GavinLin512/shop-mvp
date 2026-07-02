@@ -179,3 +179,67 @@ pnpm --filter web dev
 cp .env.example .env.test
 # 填入測試用 DATABASE_URL（建議獨立 Neon branch）
 ```
+
+---
+
+## Demo 操作
+
+完整 demo 動線：會員訂閱 → 輪詢轉 ACTIVE → 期末取消；後台建方案 + Demo Control 面板演示邊界條件（冪等、dunning、期末取消、金流商切換）。
+
+### 0. 啟用 demo 資料與控制台
+
+```bash
+# .env 設定（Demo Control 面板與 /demo/* 端點才會啟用）
+DEMO_MODE=true
+PAYMENT_PROVIDER=mock
+
+pnpm db:seed          # 建立種子帳號與方案（可重跑，以 email upsert）
+pnpm dev              # 後端
+pnpm --filter web dev # 前端（另開終端機）→ http://localhost:5173
+```
+
+> `DEMO_MODE=false`（production 預設）時，所有 `/demo/*` 端點一律回 **404**，前端不顯示 Demo Control 面板。
+
+### 種子帳號（`pnpm db:seed`）
+
+| 帳號 | 密碼 | role | 進入 |
+|------|------|------|------|
+| `admin@demo.com` | `demo1234` | ADMIN | 後台（建方案 + Demo Control） |
+| `user@demo.com` | `demo1234` | USER | 前台（訂閱動線） |
+| `user2@demo.com` | `demo1234` | USER | 前台（本人隔離示範） |
+
+種子方案：`Basic (USD)` $10.00、`Pro (JPY)` ¥1500（demo reset 不會清掉種子列）。
+
+### 1. 前台（會員）動線
+
+1. 以 `user@demo.com` 登入 → 依 role 自動進**前台**。
+2. 點方案 **Subscribe** → 建立 Subscription（`INCOMPLETE` 橘）+ 首筆 Order，內部自動觸發扣款。
+3. 前端**輪詢** `GET /subscriptions/:id`，mock gateway 非同步回打 webhook 後，Badge 數秒內翻 `ACTIVE`（綠）。
+4. 點 **Cancel** → 期末取消（`cancelAtPeriodEnd=true`）：Badge 維持 `ACTIVE` + 「期末取消」標記，**不會**立刻變 CANCELED（DECISION #9）。
+
+### 2. 後台（ADMIN）動線
+
+以 `admin@demo.com` 登入 → 進**後台**：
+
+- **建立方案**：填 name / amount / currency / intervalDays → `POST /plans`，新方案即可在前台看到。
+- **訂閱清單**：即時輪詢狀態與 next billing；每列可 **MAKE DUE**（把 `nextBillingDate` 撥成當下）。
+- RBAC 示範：USER 打 `POST /plans` 會得 **403**（authz≠authn，DECISION #6）。
+
+### 3. Demo Control 面板（後台 danger-zone，`DEMO_MODE=true` 才顯示）
+
+| 操作 | 演示 | provider |
+|------|------|----------|
+| **Reset**（輸入 `RESET` 確認） | 清訂閱類資料 + 非種子 Member/Plan，保留種子列 | Mock / Stripe |
+| **Run billing now** | `runBillingCycle(now)` 逐筆 tx 續扣（配合 MAKE DUE 演 #7 `<= now`、#9 期末取消生效） | Mock / Stripe |
+| **Force-fail 開關** | 全域強制扣款失敗 → 演 dunning 重試 3 次轉 CANCELED（#5）；中途關掉回 ACTIVE | Mock 專屬 |
+| **Replay last webhook** | 重送上一筆 webhook，回應 `duplicate:true` → 演冪等不重複扣款（#1/#2） | Mock 專屬 |
+
+> 典型 dunning 演示：開 Force-fail → MAKE DUE → Run billing（失敗，`PAST_DUE`）重複 3 次 → 訂閱轉 `CANCELED`；中途關掉 Force-fail 再 Run billing 則回 `ACTIVE`。
+
+### 4. 金流商即時切換（Mock ↔ Stripe）
+
+Demo Control 面板可**免重啟**切換 provider（in-memory，`Subscription.provider` 綁定建立當下的商家，切換不影響在途訂閱）：
+
+- 切 **Stripe** 需先在 `.env` 設好 `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` / `STRIPE_PUBLISHABLE_KEY`（未設定則選項 disable）。
+- Stripe 首扣走**前端 Stripe.js（PaymentElement）**在 app 內刷卡；本機需另開 `stripe listen --forward-to localhost:3000/webhooks/stripe`，其 `whsec_` 要等於 `.env`。
+- 詳細踩坑見 [`.claude/rules/FAILURES.md`](.claude/rules/FAILURES.md)。
